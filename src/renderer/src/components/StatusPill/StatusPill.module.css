@@ -30,7 +30,7 @@
 .connecting {
   color: var(--status-warn);
   background: var(--status-warn-soft);
-  border-color: rgba(224, 168, 62, 0.4);
+  border-color: var(--status-warn-border);
 }
 .connecting .dot {
   background: var(--status-warn);
@@ -49,7 +49,7 @@
 .warn {
   color: var(--status-danger);
   background: var(--status-danger-soft);
-  border-color: rgba(226, 86, 79, 0.4);
+  border-color: var(--status-danger-border);
 }
 .warn .dot {
   background: var(--status-danger);
