@@ -1,0 +1,24 @@
+appId: com.ultk.app
+productName: ULTK
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**/*
+  - package.json
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  artifactName: ${productName}-${version}-setup.${ext}
+publish:
+  provider: github
+  owner: Timmsy1998
+  repo: Ultimate-League-ToolKit
