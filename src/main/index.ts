@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, nativeTheme, session, shell } from 'electr
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { LcuConnectionManager } from './lcu/connection-manager'
+import { notify } from './notifications/notifier'
 import { readSettings, writeSettings } from './settings/store'
 
 const APP_USER_MODEL_ID = 'com.ultk.app'
@@ -89,6 +90,14 @@ function registerLcuBridge(): void {
   lcuManager.on('summoner', (summoner) => broadcast('lcu:summoner', summoner))
   lcuManager.on('phase', (phase) => broadcast('lcu:phase', phase))
   lcuManager.on('activity', (activity) => broadcast('lcu:activity', activity))
+
+  // Only the time-sensitive transition gets an OS notification — everything
+  // else is covered by the in-app activity feed.
+  lcuManager.on('phase', (phase) => {
+    if (phase === 'ReadyCheck') {
+      void notify({ title: 'Ready check', body: 'Your match is ready — accept in the League Client.' })
+    }
+  })
 
   ipcMain.handle('lcu:get-snapshot', () => lcuManager.getSnapshot())
 
