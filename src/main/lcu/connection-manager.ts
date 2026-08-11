@@ -3,12 +3,14 @@ import { EventEmitter } from 'node:events'
 import { findLcuCredentials } from './credentials'
 import { LcuEventSocket } from './event-socket'
 import { LcuHttpClient } from './http-client'
+import { fetchRunePages } from './rune-pages'
 import type {
   ActivityEntry,
   ConnectionStatus,
   GameflowPhase,
   LcuEvent,
   LcuSnapshot,
+  RunePageSummary,
   SummonerInfo
 } from '../../shared/lcu-types'
 import { isGameflowPhase, isSummonerInfo } from './validate'
@@ -65,6 +67,13 @@ export class LcuConnectionManager extends EventEmitter {
       phase: this.phase,
       activity: this.activity
     }
+  }
+
+  getRunePages(): Promise<RunePageSummary[]> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchRunePages(this.client)
   }
 
   private schedulePoll(delay: number): void {

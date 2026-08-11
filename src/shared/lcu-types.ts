@@ -46,3 +46,11 @@ export interface LcuSnapshot {
   phase: GameflowPhase
   activity: ActivityEntry[]
 }
+
+export interface RunePageSummary {
+  id: number
+  name: string
+  current: boolean
+  primaryStyleName: string
+  subStyleName: string
+}

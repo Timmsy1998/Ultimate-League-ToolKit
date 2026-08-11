@@ -1,18 +1,14 @@
-import { BookOpen, Clock, LayoutList, Sparkles } from 'lucide-react'
+import { Clock, LayoutList, Sparkles } from 'lucide-react'
 import { Card } from '@renderer/components/Card/Card'
+import { RunePagesCard } from './tools/RunePagesCard'
 import styles from './Page.module.css'
 import toolStyles from './Tools.module.css'
 
-const TOOLS = [
+const COMING_SOON_TOOLS = [
   {
     icon: LayoutList,
     title: 'Match history',
     description: 'Browse recent games with a cleaner, faster view than the client.'
-  },
-  {
-    icon: BookOpen,
-    title: 'Rune pages',
-    description: 'Build and switch between rune pages without leaving champ select.'
   },
   {
     icon: Clock,
@@ -39,7 +35,8 @@ export function Tools(): React.JSX.Element {
       </div>
 
       <div className={styles.grid}>
-        {TOOLS.map(({ icon, title, description }) => (
+        <RunePagesCard />
+        {COMING_SOON_TOOLS.map(({ icon, title, description }) => (
           <Card key={title} icon={icon} title={title} tag="Coming soon">
             <p className={toolStyles.description}>{description}</p>
           </Card>
