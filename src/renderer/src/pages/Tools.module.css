@@ -33,6 +33,7 @@
 }
 
 .pageList {
+.matchList {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -83,4 +84,45 @@
 .pageStyles {
   font-size: 12px;
   color: var(--text-tertiary);
+.matchItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 12px;
+}
+
+.matchItem:last-child {
+  border-bottom: none;
+}
+
+.matchResult {
+  width: 36px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.matchWin {
+  color: var(--accent);
+}
+
+.matchLoss {
+  color: var(--status-danger);
+}
+
+.matchMode {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matchDuration {
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
 }

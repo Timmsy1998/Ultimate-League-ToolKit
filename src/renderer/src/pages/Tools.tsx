@@ -1,6 +1,7 @@
-import { Clock, LayoutList, Sparkles } from 'lucide-react'
-import { Card } from '@renderer/components/Card/Card'
+import { BookOpen, Clock, LayoutList, Sparkles } from 'lucide-react'
 import { RunePagesCard } from './tools/RunePagesCard'
+import { Card } from '@renderer/components/Card/Card'
+import { MatchHistoryCard } from './tools/MatchHistoryCard'
 import styles from './Page.module.css'
 import toolStyles from './Tools.module.css'
 
@@ -36,6 +37,7 @@ export function Tools(): React.JSX.Element {
 
       <div className={styles.grid}>
         <RunePagesCard />
+        <MatchHistoryCard />
         {COMING_SOON_TOOLS.map(({ icon, title, description }) => (
           <Card key={title} icon={icon} title={title} tag="Coming soon">
             <p className={toolStyles.description}>{description}</p>
