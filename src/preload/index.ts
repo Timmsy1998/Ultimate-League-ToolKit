@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { ActivityEntry, GameflowPhase, LcuSnapshot, SummonerInfo } from '../shared/lcu-types'
+import type { Settings } from '../shared/settings-types'
 
 // Every exposed call is an explicit, typed channel — never a generic
 // ipcRenderer passthrough. `on*` helpers return an unsubscribe function so
@@ -23,7 +24,20 @@ const lcu = {
   onActivity: (cb: (activity: ActivityEntry[]) => void) => subscribe('lcu:activity', cb)
 }
 
-const api = { lcu }
+const settings = {
+  get: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),
+  set: (partial: Partial<Settings>): Promise<Settings> => ipcRenderer.invoke('settings:set', partial)
+}
+
+const theme = {
+  // Fire-and-forget: lets main keep the native titlebar overlay in sync
+  // with the resolved (post-'system') theme. No response expected.
+  reportEffective: (value: 'dark' | 'light'): void => {
+    ipcRenderer.send('theme:effective-changed', value)
+  }
+}
+
+const api = { lcu, settings, theme }
 
 if (process.contextIsolated) {
   try {

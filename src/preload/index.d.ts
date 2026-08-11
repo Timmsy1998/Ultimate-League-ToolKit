@@ -1,4 +1,5 @@
 import type { ActivityEntry, GameflowPhase, LcuSnapshot, SummonerInfo } from '../shared/lcu-types'
+import type { Settings } from '../shared/settings-types'
 
 export interface LcuBridge {
   getSnapshot: () => Promise<LcuSnapshot>
@@ -8,10 +9,21 @@ export interface LcuBridge {
   onActivity: (cb: (activity: ActivityEntry[]) => void) => () => void
 }
 
+export interface SettingsBridge {
+  get: () => Promise<Settings>
+  set: (partial: Partial<Settings>) => Promise<Settings>
+}
+
+export interface ThemeBridge {
+  reportEffective: (value: 'dark' | 'light') => void
+}
+
 declare global {
   interface Window {
     api: {
       lcu: LcuBridge
+      settings: SettingsBridge
+      theme: ThemeBridge
     }
   }
 }

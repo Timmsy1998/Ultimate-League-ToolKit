@@ -1,21 +1,18 @@
-import { useState } from 'react'
 import { Monitor, Moon, RefreshCw, Sun } from 'lucide-react'
 import { Toggle } from '@renderer/components/Toggle/Toggle'
+import { useSettings } from '@renderer/settings/SettingsContext'
+import type { ThemePreference } from '../../../shared/settings-types'
 import styles from './Page.module.css'
 import settingsStyles from './Settings.module.css'
 
-const THEMES = [
+const THEMES: { id: ThemePreference; label: string; icon: typeof Moon }[] = [
   { id: 'dark', label: 'Dark', icon: Moon },
   { id: 'light', label: 'Light', icon: Sun },
   { id: 'system', label: 'System', icon: Monitor }
-] as const
-
-type ThemeId = (typeof THEMES)[number]['id']
+]
 
 export function Settings(): React.JSX.Element {
-  const [launchOnStartup, setLaunchOnStartup] = useState(false)
-  const [notifications, setNotifications] = useState(true)
-  const [theme, setTheme] = useState<ThemeId>('dark')
+  const { settings, updateSettings } = useSettings()
 
   return (
     <div className={styles.page}>
@@ -40,14 +37,14 @@ export function Settings(): React.JSX.Element {
                   key={id}
                   type="button"
                   role="radio"
-                  aria-checked={theme === id}
+                  aria-checked={settings.theme === id}
                   title={label}
                   className={
-                    theme === id
+                    settings.theme === id
                       ? `${settingsStyles.themeOption} ${settingsStyles.themeOptionActive}`
                       : settingsStyles.themeOption
                   }
-                  onClick={() => setTheme(id)}
+                  onClick={() => updateSettings({ theme: id })}
                 >
                   <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
                   <span className={settingsStyles.srOnly}>{label}</span>
@@ -66,7 +63,11 @@ export function Settings(): React.JSX.Element {
               <p className={settingsStyles.rowTitle}>Launch on startup</p>
               <p className={settingsStyles.rowDescription}>Open ULTK automatically when you sign in to Windows.</p>
             </div>
-            <Toggle checked={launchOnStartup} onChange={setLaunchOnStartup} label="Launch on startup" />
+            <Toggle
+              checked={settings.launchOnStartup}
+              onChange={(checked) => updateSettings({ launchOnStartup: checked })}
+              label="Launch on startup"
+            />
           </div>
           <div className={settingsStyles.divider} />
           <div className={settingsStyles.row}>
@@ -74,7 +75,11 @@ export function Settings(): React.JSX.Element {
               <p className={settingsStyles.rowTitle}>Notifications</p>
               <p className={settingsStyles.rowDescription}>Show desktop alerts for client and queue events.</p>
             </div>
-            <Toggle checked={notifications} onChange={setNotifications} label="Notifications" />
+            <Toggle
+              checked={settings.notificationsEnabled}
+              onChange={(checked) => updateSettings({ notificationsEnabled: checked })}
+              label="Notifications"
+            />
           </div>
         </div>
       </section>
