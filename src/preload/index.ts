@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { ActivityEntry, GameflowPhase, LcuSnapshot, SummonerInfo } from '../shared/lcu-types'
+import type { ActivityEntry, GameflowPhase, LcuSnapshot, MatchSummary, SummonerInfo } from '../shared/lcu-types'
 import type { Settings } from '../shared/settings-types'
 
 // Every exposed call is an explicit, typed channel — never a generic
@@ -21,7 +21,8 @@ const lcu = {
   onStatus: (cb: (status: LcuSnapshot['status']) => void) => subscribe('lcu:status', cb),
   onSummoner: (cb: (summoner: SummonerInfo | null) => void) => subscribe('lcu:summoner', cb),
   onPhase: (cb: (phase: GameflowPhase) => void) => subscribe('lcu:phase', cb),
-  onActivity: (cb: (activity: ActivityEntry[]) => void) => subscribe('lcu:activity', cb)
+  onActivity: (cb: (activity: ActivityEntry[]) => void) => subscribe('lcu:activity', cb),
+  getMatchHistory: (): Promise<MatchSummary[]> => ipcRenderer.invoke('lcu:get-match-history')
 }
 
 const settings = {

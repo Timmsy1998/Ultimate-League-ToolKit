@@ -3,12 +3,14 @@ import { EventEmitter } from 'node:events'
 import { findLcuCredentials } from './credentials'
 import { LcuEventSocket } from './event-socket'
 import { LcuHttpClient } from './http-client'
+import { fetchMatchHistory } from './match-history'
 import type {
   ActivityEntry,
   ConnectionStatus,
   GameflowPhase,
   LcuEvent,
   LcuSnapshot,
+  MatchSummary,
   SummonerInfo
 } from '../../shared/lcu-types'
 import { isGameflowPhase, isSummonerInfo } from './validate'
@@ -65,6 +67,13 @@ export class LcuConnectionManager extends EventEmitter {
       phase: this.phase,
       activity: this.activity
     }
+  }
+
+  getMatchHistory(count = 10): Promise<MatchSummary[]> {
+    if (!this.client || !this.summoner) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchMatchHistory(this.client, this.summoner.summonerId, count)
   }
 
   private schedulePoll(delay: number): void {

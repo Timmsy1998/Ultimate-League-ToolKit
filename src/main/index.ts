@@ -91,6 +91,7 @@ function registerLcuBridge(): void {
   lcuManager.on('activity', (activity) => broadcast('lcu:activity', activity))
 
   ipcMain.handle('lcu:get-snapshot', () => lcuManager.getSnapshot())
+  ipcMain.handle('lcu:get-match-history', () => lcuManager.getMatchHistory())
 
   lcuManager.start()
 }
