@@ -32,6 +32,7 @@
   background: var(--bg-surface-hover);
 }
 
+.pageList {
 .matchList {
   list-style: none;
   margin: 0;
@@ -43,6 +44,46 @@
   overflow-y: auto;
 }
 
+.pageItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pageItem:last-child {
+  border-bottom: none;
+}
+
+.pageNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pageName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pageBadge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  padding: 1px var(--space-2);
+}
+
+.pageStyles {
+  font-size: 12px;
+  color: var(--text-tertiary);
 .matchItem {
   display: flex;
   align-items: center;

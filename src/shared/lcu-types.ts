@@ -48,6 +48,12 @@ export interface LcuSnapshot {
   activity: ActivityEntry[]
 }
 
+export interface RunePageSummary {
+  id: number
+  name: string
+  current: boolean
+  primaryStyleName: string
+  subStyleName: string
 export interface MatchSummary {
   gameId: number
   queueType: string

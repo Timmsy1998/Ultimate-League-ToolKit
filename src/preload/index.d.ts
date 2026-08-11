@@ -1,4 +1,4 @@
-import type { ActivityEntry, GameflowPhase, LcuSnapshot, MatchSummary, SummonerInfo } from '../shared/lcu-types'
+import type { ActivityEntry, GameflowPhase, LcuSnapshot, RunePageSummary, MatchSummary, SummonerInfo } from '../shared/lcu-types'
 import type { Settings } from '../shared/settings-types'
 
 export interface LcuBridge {
@@ -7,6 +7,7 @@ export interface LcuBridge {
   onSummoner: (cb: (summoner: SummonerInfo | null) => void) => () => void
   onPhase: (cb: (phase: GameflowPhase) => void) => () => void
   onActivity: (cb: (activity: ActivityEntry[]) => void) => () => void
+  getRunePages: () => Promise<RunePageSummary[]>
   getMatchHistory: () => Promise<MatchSummary[]>
 }
 

@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 import { findLcuCredentials } from './credentials'
 import { LcuEventSocket } from './event-socket'
 import { LcuHttpClient } from './http-client'
+import { fetchRunePages } from './rune-pages'
 import { fetchMatchHistory } from './match-history'
 import type {
   ActivityEntry,
@@ -10,6 +11,7 @@ import type {
   GameflowPhase,
   LcuEvent,
   LcuSnapshot,
+  RunePageSummary,
   MatchSummary,
   SummonerInfo
 } from '../../shared/lcu-types'
@@ -69,6 +71,11 @@ export class LcuConnectionManager extends EventEmitter {
     }
   }
 
+  getRunePages(): Promise<RunePageSummary[]> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchRunePages(this.client)
   getMatchHistory(count = 10): Promise<MatchSummary[]> {
     if (!this.client || !this.summoner) {
       return Promise.reject(new Error('Not connected to the League Client'))
