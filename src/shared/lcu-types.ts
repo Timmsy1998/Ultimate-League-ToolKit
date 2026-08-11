@@ -54,6 +54,8 @@ export interface RunePageSummary {
   current: boolean
   primaryStyleName: string
   subStyleName: string
+}
+
 export interface MatchSummary {
   gameId: number
   queueType: string
