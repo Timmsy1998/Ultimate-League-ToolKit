@@ -1,0 +1,4 @@
+# Auto-requests review on every PR. Merging isn't blocked on it for
+# solo-maintainer periods — see github-rulesets/README.md for how that's
+# handled via a bypass actor on the branch rulesets.
+* @Timmsy1998
