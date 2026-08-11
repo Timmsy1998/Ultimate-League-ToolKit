@@ -6,10 +6,10 @@ CLAUDE.local.md
 # Dependencies
 node_modules/
 
-# Build output
+# Build output (note: build/ is NOT ignored — it holds versioned
+# electron-builder resources such as icon.ico)
 dist/
 dist-electron/
-build/
 out/
 release/
 

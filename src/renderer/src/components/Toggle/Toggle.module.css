@@ -1,0 +1,31 @@
+.track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-strong);
+  flex-shrink: 0;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.track.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--text-primary);
+  transition: transform 120ms ease;
+}
+
+.track.on .thumb {
+  transform: translateX(16px);
+  background: var(--text-on-accent);
+}
