@@ -1,7 +1,7 @@
 {
   "name": "ultk",
   "productName": "ULTK",
-  "version": "0.1.0",
+  "version": "0.0.0-development",
   "description": "A compliance-first League of Legends companion app built on the local client API.",
   "main": "./out/main/index.js",
   "author": "Timmsy1998",
@@ -13,12 +13,14 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "icons": "node scripts/generate-icons.mjs",
-    "dist:win": "electron-vite build && electron-builder --win"
+    "dist:win": "electron-vite build && electron-builder --win",
+    "release:win": "electron-vite build && electron-builder --win --publish always"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/manrope": "^5.3.0",
+    "electron-updater": "^6.8.9",
     "lucide-react": "^1.31.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -33,6 +35,7 @@
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "png-to-ico": "^3.0.2",
+    "semantic-release": "^25.0.9",
     "sharp": "^0.35.3",
     "typescript": "^5.9.3"
   }
