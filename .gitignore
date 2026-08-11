@@ -3,6 +3,10 @@ CLAUDE.md
 CLAUDE.local.md
 .claude/
 
+# GitHub ruleset JSON — config for GitHub itself (imported via the web UI),
+# not part of the codebase
+github-rulesets/
+
 # Dependencies
 node_modules/
 
