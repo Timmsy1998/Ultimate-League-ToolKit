@@ -100,6 +100,7 @@ function registerLcuBridge(): void {
   })
 
   ipcMain.handle('lcu:get-snapshot', () => lcuManager.getSnapshot())
+  ipcMain.handle('lcu:get-match-history', () => lcuManager.getMatchHistory())
 
   lcuManager.start()
 }

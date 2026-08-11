@@ -6,6 +6,7 @@ export interface LcuCredentials {
 export type ConnectionStatus = 'offline' | 'connecting' | 'online'
 
 export interface SummonerInfo {
+  summonerId: number
   displayName: string
   summonerLevel: number
   profileIconId: number
@@ -45,4 +46,14 @@ export interface LcuSnapshot {
   summoner: SummonerInfo | null
   phase: GameflowPhase
   activity: ActivityEntry[]
+}
+
+export interface MatchSummary {
+  gameId: number
+  queueType: string
+  // null when the response didn't let us confidently match the current
+  // summoner to a participant — shown as "unknown" rather than guessed.
+  win: boolean | null
+  durationSeconds: number
+  playedAt: number
 }
