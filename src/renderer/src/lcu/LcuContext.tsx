@@ -11,13 +11,15 @@ interface LcuState {
   summoner: SummonerInfo | null
   phase: GameflowPhase
   activity: ActivityEntry[]
+  connectedAt: number | null
 }
 
 const INITIAL_STATE: LcuState = {
   status: 'offline',
   summoner: null,
   phase: 'None',
-  activity: []
+  activity: [],
+  connectedAt: null
 }
 
 const LcuStateContext = createContext<LcuState>(INITIAL_STATE)
@@ -36,7 +38,8 @@ export function LcuProvider({ children }: { children: React.ReactNode }): React.
       window.api.lcu.onStatus((status) => setState((s) => ({ ...s, status }))),
       window.api.lcu.onSummoner((summoner) => setState((s) => ({ ...s, summoner }))),
       window.api.lcu.onPhase((phase) => setState((s) => ({ ...s, phase }))),
-      window.api.lcu.onActivity((activity) => setState((s) => ({ ...s, activity })))
+      window.api.lcu.onActivity((activity) => setState((s) => ({ ...s, activity }))),
+      window.api.lcu.onConnectedAt((connectedAt) => setState((s) => ({ ...s, connectedAt })))
     ]
 
     return () => {

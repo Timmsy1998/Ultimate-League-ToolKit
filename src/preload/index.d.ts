@@ -8,6 +8,7 @@ export interface LcuBridge {
   onSummoner: (cb: (summoner: SummonerInfo | null) => void) => () => void
   onPhase: (cb: (phase: GameflowPhase) => void) => () => void
   onActivity: (cb: (activity: ActivityEntry[]) => void) => () => void
+  onConnectedAt: (cb: (connectedAt: number | null) => void) => () => void
   getRunePages: () => Promise<RunePageSummary[]>
   getMatchHistory: () => Promise<MatchSummary[]>
 }

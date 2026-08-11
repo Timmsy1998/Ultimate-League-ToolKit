@@ -3,7 +3,7 @@ import { Card } from '@renderer/components/Card/Card'
 import { EmptyState } from '@renderer/components/EmptyState/EmptyState'
 import { StatusPill, type Status } from '@renderer/components/StatusPill/StatusPill'
 import { useLcu } from '@renderer/lcu/LcuContext'
-import type { GameflowPhase } from '../../../shared/lcu-types'
+import { PHASE_LABELS } from '@renderer/lcu/phaseLabels'
 import styles from './Page.module.css'
 import dashboardStyles from './Dashboard.module.css'
 
@@ -11,23 +11,6 @@ const STATUS_PILL: Record<string, { status: Status; label: string }> = {
   offline: { status: 'offline', label: 'Client not detected' },
   connecting: { status: 'connecting', label: 'Connecting…' },
   online: { status: 'online', label: 'Connected' }
-}
-
-const PHASE_LABELS: Partial<Record<GameflowPhase, string>> = {
-  None: 'Idle',
-  Lobby: 'In a lobby',
-  Matchmaking: 'Searching for a match',
-  ReadyCheck: 'Ready check',
-  ChampSelect: 'Champion select',
-  GameStart: 'Starting game',
-  InProgress: 'In game',
-  Reconnect: 'Reconnecting',
-  WaitingForStats: 'Waiting for stats',
-  PreEndOfGame: 'Post-game',
-  EndOfGame: 'Post-game',
-  TerminatedInError: 'Something went wrong',
-  FailedToLaunch: 'Failed to launch',
-  CheckedIntoTournament: 'Checked into tournament'
 }
 
 export function Dashboard(): React.JSX.Element {

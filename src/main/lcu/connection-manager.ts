@@ -35,6 +35,7 @@ export declare interface LcuConnectionManager {
   on(event: 'summoner', listener: (summoner: SummonerInfo | null) => void): this
   on(event: 'phase', listener: (phase: GameflowPhase) => void): this
   on(event: 'activity', listener: (entries: ActivityEntry[]) => void): this
+  on(event: 'connectedAt', listener: (connectedAt: number | null) => void): this
 }
 
 export class LcuConnectionManager extends EventEmitter {
@@ -42,6 +43,7 @@ export class LcuConnectionManager extends EventEmitter {
   private summoner: SummonerInfo | null = null
   private phase: GameflowPhase = 'None'
   private activity: ActivityEntry[] = []
+  private connectedAt: number | null = null
 
   private pollTimer: NodeJS.Timeout | null = null
   private tick = 0
@@ -67,7 +69,8 @@ export class LcuConnectionManager extends EventEmitter {
       status: this.status,
       summoner: this.summoner,
       phase: this.phase,
-      activity: this.activity
+      activity: this.activity,
+      connectedAt: this.connectedAt
     }
   }
 
@@ -120,6 +123,7 @@ export class LcuConnectionManager extends EventEmitter {
       this.setSummoner(isSummonerInfo(summoner) ? summoner : null)
       this.setPhase(isGameflowPhase(phase) ? phase : 'None')
       this.setStatus('online')
+      this.setConnectedAt(Date.now())
       this.pushActivity('Connected to League Client')
     } catch {
       // Socket came up but the initial fetch failed — client is probably
@@ -134,6 +138,7 @@ export class LcuConnectionManager extends EventEmitter {
     this.setStatus('offline')
     this.setSummoner(null)
     this.setPhase('None')
+    this.setConnectedAt(null)
     this.schedulePoll(POLL_INTERVAL_MS)
   }
 
@@ -162,6 +167,12 @@ export class LcuConnectionManager extends EventEmitter {
     this.emit('phase', phase)
     const message = PHASE_ACTIVITY_MESSAGES[phase]
     if (message) this.pushActivity(message)
+  }
+
+  private setConnectedAt(connectedAt: number | null): void {
+    if (this.connectedAt === connectedAt) return
+    this.connectedAt = connectedAt
+    this.emit('connectedAt', connectedAt)
   }
 
   private pushActivity(message: string): void {
