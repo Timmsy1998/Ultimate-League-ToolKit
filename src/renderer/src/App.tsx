@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Sidebar, type PageId } from '@renderer/components/Sidebar/Sidebar'
 import { TitleBar } from '@renderer/components/TitleBar/TitleBar'
+import { UpdateBanner } from '@renderer/components/UpdateBanner/UpdateBanner'
 import { LcuProvider } from '@renderer/lcu/LcuContext'
 import { About } from '@renderer/pages/About'
 import { Dashboard } from '@renderer/pages/Dashboard'
@@ -9,6 +10,7 @@ import { Settings } from '@renderer/pages/Settings'
 import { Tools } from '@renderer/pages/Tools'
 import { SettingsProvider } from '@renderer/settings/SettingsContext'
 import { useEffectiveTheme } from '@renderer/settings/useEffectiveTheme'
+import { UpdaterProvider } from '@renderer/updater/UpdaterContext'
 import styles from './App.module.css'
 
 const PAGES: Record<PageId, React.ComponentType> = {
@@ -40,6 +42,7 @@ function Shell(): React.JSX.Element {
     <LcuProvider>
       <div className={styles.shell}>
         <TitleBar />
+        <UpdateBanner />
         <div className={styles.body}>
           <Sidebar active={page} onNavigate={setPage} />
           <main className={styles.content}>
@@ -54,8 +57,10 @@ function Shell(): React.JSX.Element {
 function App(): React.JSX.Element {
   return (
     <SettingsProvider>
-      <ThemeApplier />
-      <Shell />
+      <UpdaterProvider>
+        <ThemeApplier />
+        <Shell />
+      </UpdaterProvider>
     </SettingsProvider>
   )
 }

@@ -76,6 +76,16 @@
   opacity: 0.55;
 }
 
+.spin {
+  animation: spin 1.1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

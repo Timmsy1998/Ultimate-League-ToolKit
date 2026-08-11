@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { LcuConnectionManager } from './lcu/connection-manager'
 import { notify } from './notifications/notifier'
 import { readSettings, writeSettings } from './settings/store'
+import { appUpdater } from './updater/auto-updater'
 
 const APP_USER_MODEL_ID = 'com.ultk.app'
 
@@ -106,6 +107,16 @@ function registerLcuBridge(): void {
   lcuManager.start()
 }
 
+function registerUpdaterBridge(): void {
+  appUpdater.on('state', (state) => broadcast('update:state', state))
+
+  ipcMain.handle('update:get-state', () => appUpdater.getState())
+  ipcMain.handle('update:check', () => appUpdater.check())
+  ipcMain.on('update:install', () => appUpdater.installNow())
+
+  appUpdater.start()
+}
+
 function registerSettingsBridge(): void {
   ipcMain.handle('settings:get', () => readSettings())
   ipcMain.handle('settings:set', async (_event, partial: unknown) => {
@@ -151,8 +162,11 @@ app.whenReady().then(async () => {
     })
   })
 
+  ipcMain.handle('app:get-version', () => app.getVersion())
+
   createWindow(await resolveInitialTheme())
   registerLcuBridge()
+  registerUpdaterBridge()
 
   app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow(await resolveInitialTheme())
@@ -167,4 +181,5 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   lcuManager.stop()
+  appUpdater.stop()
 })

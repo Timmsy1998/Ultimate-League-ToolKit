@@ -1,0 +1,59 @@
+name: Release
+
+# Per the branch workflow in CLAUDE.md, the only thing that ever lands on
+# master is the current version-integration branch being merged — so every
+# push here is a real release candidate. semantic-release reads Conventional
+# Commit messages since the last tag to decide whether (and how) to bump.
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+# Never let two release runs race each other.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Creates the git tag and GitHub Release (with generated notes) if the
+      # commits since the last release warrant one. package.json is never
+      # touched or committed back to master — it stays "0.0.0-development"
+      # in source control on purpose, so master never receives an automated
+      # commit that would need a bypass on its branch protection.
+      - name: Determine and publish release
+        id: semrel
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # electron-builder reads the version to stamp into the installer and
+      # latest.yml (which the in-app updater checks) from package.json, so
+      # it's set here for the build only — never committed.
+      - name: Set build version
+        if: steps.semrel.outputs.new-release-published == 'true'
+        shell: bash
+        run: npm version ${{ steps.semrel.outputs.new-release-version }} --no-git-tag-version --allow-same-version
+
+      - name: Build and publish installer
+        if: steps.semrel.outputs.new-release-published == 'true'
+        run: npm run release:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

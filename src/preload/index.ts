@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { ActivityEntry, GameflowPhase, LcuSnapshot, RunePageSummary, MatchSummary, SummonerInfo } from '../shared/lcu-types'
 import type { Settings } from '../shared/settings-types'
+import type { UpdaterState } from '../shared/updater-types'
 
 // Every exposed call is an explicit, typed channel — never a generic
 // ipcRenderer passthrough. `on*` helpers return an unsubscribe function so
@@ -39,7 +40,22 @@ const theme = {
   }
 }
 
-const api = { lcu, settings, theme }
+const updater = {
+  getState: (): Promise<UpdaterState> => ipcRenderer.invoke('update:get-state'),
+  onState: (cb: (state: UpdaterState) => void) => subscribe('update:state', cb),
+  check: (): Promise<void> => ipcRenderer.invoke('update:check'),
+  // Fire-and-forget: quits and relaunches the app, so no response is ever
+  // going to arrive on this channel.
+  install: (): void => {
+    ipcRenderer.send('update:install')
+  }
+}
+
+const appInfo = {
+  getVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version')
+}
+
+const api = { lcu, settings, theme, updater, app: appInfo }
 
 if (process.contextIsolated) {
   try {
