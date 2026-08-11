@@ -33,6 +33,16 @@
 }
 
 .pageList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
 .matchList {
   list-style: none;
   margin: 0;
@@ -84,6 +94,8 @@
 .pageStyles {
   font-size: 12px;
   color: var(--text-tertiary);
+}
+
 .matchItem {
   display: flex;
   align-items: center;

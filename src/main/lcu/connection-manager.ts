@@ -76,6 +76,8 @@ export class LcuConnectionManager extends EventEmitter {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
     return fetchRunePages(this.client)
+  }
+
   getMatchHistory(count = 10): Promise<MatchSummary[]> {
     if (!this.client || !this.summoner) {
       return Promise.reject(new Error('Not connected to the League Client'))

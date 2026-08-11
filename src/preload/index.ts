@@ -22,7 +22,7 @@ const lcu = {
   onSummoner: (cb: (summoner: SummonerInfo | null) => void) => subscribe('lcu:summoner', cb),
   onPhase: (cb: (phase: GameflowPhase) => void) => subscribe('lcu:phase', cb),
   onActivity: (cb: (activity: ActivityEntry[]) => void) => subscribe('lcu:activity', cb),
-  getRunePages: (): Promise<RunePageSummary[]> => ipcRenderer.invoke('lcu:get-rune-pages')
+  getRunePages: (): Promise<RunePageSummary[]> => ipcRenderer.invoke('lcu:get-rune-pages'),
   getMatchHistory: (): Promise<MatchSummary[]> => ipcRenderer.invoke('lcu:get-match-history')
 }
 
