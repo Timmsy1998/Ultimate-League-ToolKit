@@ -1,16 +1,12 @@
-import { Clock, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { Card } from '@renderer/components/Card/Card'
 import { MatchHistoryCard } from './tools/MatchHistoryCard'
 import { RunePagesCard } from './tools/RunePagesCard'
+import { SessionOverviewCard } from './tools/SessionOverviewCard'
 import styles from './Page.module.css'
 import toolStyles from './Tools.module.css'
 
 const COMING_SOON_TOOLS = [
-  {
-    icon: Clock,
-    title: 'Session overview',
-    description: 'A quiet summary of your current client session.'
-  },
   {
     icon: Sparkles,
     title: 'More on the way',
@@ -31,6 +27,7 @@ export function Tools(): React.JSX.Element {
       </div>
 
       <div className={styles.grid}>
+        <SessionOverviewCard />
         <RunePagesCard />
         <MatchHistoryCard />
         {COMING_SOON_TOOLS.map(({ icon, title, description }) => (

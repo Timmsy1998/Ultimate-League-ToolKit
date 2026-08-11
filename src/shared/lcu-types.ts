@@ -46,6 +46,7 @@ export interface LcuSnapshot {
   summoner: SummonerInfo | null
   phase: GameflowPhase
   activity: ActivityEntry[]
+  connectedAt: number | null
 }
 
 export interface RunePageSummary {
