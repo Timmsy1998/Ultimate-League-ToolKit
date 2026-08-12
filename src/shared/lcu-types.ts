@@ -57,6 +57,68 @@ export interface RunePageSummary {
   subStyleName: string
 }
 
+export interface RunePerk {
+  id: number
+  name: string
+  iconPath: string
+}
+
+export interface RuneStyleSlot {
+  type: string
+  perkIds: number[]
+}
+
+export interface RuneStyle {
+  id: number
+  name: string
+  iconPath: string
+  slots: RuneStyleSlot[]
+  allowedSubStyles: number[]
+}
+
+export interface StatShardRows {
+  offense: number[]
+  flex: number[]
+  defense: number[]
+}
+
+export interface PerkCatalog {
+  styles: RuneStyle[]
+  perks: Record<number, RunePerk>
+  statShards: StatShardRows
+}
+
+export interface ChampionSummary {
+  id: number
+  name: string
+  alias: string
+  squarePortraitPath: string
+}
+
+// Existing client rune page, as needed for the "overwrite" import flow —
+// unlike RunePageSummary this carries whether the page can be written to.
+export interface EditableRunePage {
+  id: number
+  name: string
+  isEditable: boolean
+}
+
+export interface ImportRunePageRequest {
+  name: string
+  championId: number | null
+  primaryStyleId: number
+  subStyleId: number
+  selectedPerkIds: number[]
+  overwritePageId?: number
+}
+
+export interface ImportRunePageResult {
+  ok: boolean
+  overwritten: boolean
+  error?: string
+  editablePages?: EditableRunePage[]
+}
+
 export interface MatchSummary {
   gameId: number
   queueType: string

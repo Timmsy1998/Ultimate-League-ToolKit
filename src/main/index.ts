@@ -2,7 +2,9 @@ import { app, BrowserWindow, ipcMain, nativeTheme, session, shell } from 'electr
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { LcuConnectionManager } from './lcu/connection-manager'
+import { isAllowedAssetPath, isImportRunePageRequest } from './lcu/validate'
 import { notify } from './notifications/notifier'
+import * as runeBookStore from './rune-book/store'
 import { readSettings, writeSettings } from './settings/store'
 import { appUpdater } from './updater/auto-updater'
 
@@ -104,8 +106,24 @@ function registerLcuBridge(): void {
   ipcMain.handle('lcu:get-snapshot', () => lcuManager.getSnapshot())
   ipcMain.handle('lcu:get-rune-pages', () => lcuManager.getRunePages())
   ipcMain.handle('lcu:get-match-history', () => lcuManager.getMatchHistory())
+  ipcMain.handle('lcu:get-perk-catalog', () => lcuManager.getPerkCatalog())
+  ipcMain.handle('lcu:get-champions', () => lcuManager.getChampions())
+  ipcMain.handle('lcu:get-asset', (_event, path: unknown) => {
+    if (!isAllowedAssetPath(path)) return Promise.reject(new Error('Asset path not allowed'))
+    return lcuManager.getAsset(path)
+  })
+  ipcMain.handle('lcu:import-rune-page', (_event, request: unknown) => {
+    if (!isImportRunePageRequest(request)) return Promise.reject(new Error('Invalid rune page payload'))
+    return lcuManager.importRunePage(request)
+  })
 
   lcuManager.start()
+}
+
+function registerRuneBookBridge(): void {
+  ipcMain.handle('rune-book:get', () => runeBookStore.readBook())
+  ipcMain.handle('rune-book:save-page', (_event, page: unknown) => runeBookStore.savePage(page))
+  ipcMain.handle('rune-book:delete-page', (_event, id: unknown) => runeBookStore.deletePage(id))
 }
 
 function registerUpdaterBridge(): void {
@@ -167,6 +185,7 @@ app.whenReady().then(async () => {
 
   createWindow(await resolveInitialTheme())
   registerLcuBridge()
+  registerRuneBookBridge()
   registerUpdaterBridge()
 
   app.on('activate', async () => {
