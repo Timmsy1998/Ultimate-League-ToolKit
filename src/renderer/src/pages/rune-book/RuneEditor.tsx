@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
+import { AssetIcon } from '@renderer/components/AssetIcon/AssetIcon'
 import type { ChampionSummary, PerkCatalog, RuneStyle } from '../../../../shared/lcu-types'
 import type { RuneBookPage } from '../../../../shared/rune-book-types'
-import { AssetIcon } from './AssetIcon'
 import styles from './RuneEditor.module.css'
 
 interface RuneEditorProps {

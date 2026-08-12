@@ -3,6 +3,8 @@ import type {
   ActivityEntry,
   ConnectionStatus,
   GameflowPhase,
+  GameSessionInfo,
+  RankedStats,
   SummonerInfo
 } from '../../../shared/lcu-types'
 
@@ -12,6 +14,8 @@ interface LcuState {
   phase: GameflowPhase
   activity: ActivityEntry[]
   connectedAt: number | null
+  ranked: RankedStats | null
+  gameSession: GameSessionInfo | null
 }
 
 const INITIAL_STATE: LcuState = {
@@ -19,7 +23,9 @@ const INITIAL_STATE: LcuState = {
   summoner: null,
   phase: 'None',
   activity: [],
-  connectedAt: null
+  connectedAt: null,
+  ranked: null,
+  gameSession: null
 }
 
 const LcuStateContext = createContext<LcuState>(INITIAL_STATE)
@@ -39,7 +45,9 @@ export function LcuProvider({ children }: { children: React.ReactNode }): React.
       window.api.lcu.onSummoner((summoner) => setState((s) => ({ ...s, summoner }))),
       window.api.lcu.onPhase((phase) => setState((s) => ({ ...s, phase }))),
       window.api.lcu.onActivity((activity) => setState((s) => ({ ...s, activity }))),
-      window.api.lcu.onConnectedAt((connectedAt) => setState((s) => ({ ...s, connectedAt })))
+      window.api.lcu.onConnectedAt((connectedAt) => setState((s) => ({ ...s, connectedAt }))),
+      window.api.lcu.onRanked((ranked) => setState((s) => ({ ...s, ranked }))),
+      window.api.lcu.onGameSession((gameSession) => setState((s) => ({ ...s, gameSession })))
     ]
 
     return () => {

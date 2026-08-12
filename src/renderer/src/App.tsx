@@ -3,9 +3,11 @@ import { Sidebar, type PageId } from '@renderer/components/Sidebar/Sidebar'
 import { TitleBar } from '@renderer/components/TitleBar/TitleBar'
 import { UpdateBanner } from '@renderer/components/UpdateBanner/UpdateBanner'
 import { LcuProvider } from '@renderer/lcu/LcuContext'
+import { NavigationProvider } from '@renderer/navigation/NavigationContext'
 import { About } from '@renderer/pages/About'
 import { Dashboard } from '@renderer/pages/Dashboard'
 import { Notifications } from '@renderer/pages/Notifications'
+import { Rank } from '@renderer/pages/Rank'
 import { RuneBook } from '@renderer/pages/RuneBook'
 import { Settings } from '@renderer/pages/Settings'
 import { Tools } from '@renderer/pages/Tools'
@@ -18,6 +20,7 @@ const PAGES: Record<PageId, React.ComponentType> = {
   dashboard: Dashboard,
   notifications: Notifications,
   tools: Tools,
+  rank: Rank,
   'rune-book': RuneBook,
   settings: Settings,
   about: About
@@ -42,16 +45,18 @@ function Shell(): React.JSX.Element {
 
   return (
     <LcuProvider>
-      <div className={styles.shell}>
-        <TitleBar />
-        <UpdateBanner />
-        <div className={styles.body}>
-          <Sidebar active={page} onNavigate={setPage} />
-          <main className={styles.content}>
-            <ActivePage />
-          </main>
+      <NavigationProvider value={setPage}>
+        <div className={styles.shell}>
+          <TitleBar />
+          <UpdateBanner />
+          <div className={styles.body}>
+            <Sidebar active={page} onNavigate={setPage} />
+            <main className={styles.content}>
+              <ActivePage />
+            </main>
+          </div>
         </div>
-      </div>
+      </NavigationProvider>
     </LcuProvider>
   )
 }

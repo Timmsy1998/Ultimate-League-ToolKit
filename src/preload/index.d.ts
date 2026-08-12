@@ -2,14 +2,17 @@ import type {
   ActivityEntry,
   ChampionSummary,
   GameflowPhase,
+  GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
   LcuSnapshot,
   PerkCatalog,
+  RankedStats,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
 } from '../shared/lcu-types'
+import type { RankHistory } from '../shared/rank-history-types'
 import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
@@ -21,6 +24,8 @@ export interface LcuBridge {
   onPhase: (cb: (phase: GameflowPhase) => void) => () => void
   onActivity: (cb: (activity: ActivityEntry[]) => void) => () => void
   onConnectedAt: (cb: (connectedAt: number | null) => void) => () => void
+  onRanked: (cb: (ranked: RankedStats | null) => void) => () => void
+  onGameSession: (cb: (session: GameSessionInfo | null) => void) => () => void
   getRunePages: () => Promise<RunePageSummary[]>
   getMatchHistory: () => Promise<MatchSummary[]>
   getPerkCatalog: () => Promise<PerkCatalog>
@@ -38,6 +43,10 @@ export interface RuneBookBridge {
   get: () => Promise<RuneBook>
   savePage: (page: RuneBookPage) => Promise<RuneBook>
   deletePage: (id: string) => Promise<RuneBook>
+}
+
+export interface RankHistoryBridge {
+  get: () => Promise<RankHistory>
 }
 
 export interface ThemeBridge {
@@ -61,6 +70,7 @@ declare global {
       lcu: LcuBridge
       settings: SettingsBridge
       runeBook: RuneBookBridge
+      rankHistory: RankHistoryBridge
       theme: ThemeBridge
       updater: UpdaterBridge
       app: AppInfoBridge

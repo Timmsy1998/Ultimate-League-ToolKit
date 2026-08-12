@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { LcuConnectionManager } from './lcu/connection-manager'
 import { isAllowedAssetPath, isImportRunePageRequest } from './lcu/validate'
 import { notify } from './notifications/notifier'
+import * as rankHistoryStore from './rank-history/store'
 import * as runeBookStore from './rune-book/store'
 import { readSettings, writeSettings } from './settings/store'
 import { appUpdater } from './updater/auto-updater'
@@ -94,6 +95,8 @@ function registerLcuBridge(): void {
   lcuManager.on('phase', (phase) => broadcast('lcu:phase', phase))
   lcuManager.on('activity', (activity) => broadcast('lcu:activity', activity))
   lcuManager.on('connectedAt', (connectedAt) => broadcast('lcu:connected-at', connectedAt))
+  lcuManager.on('ranked', (ranked) => broadcast('lcu:ranked', ranked))
+  lcuManager.on('gameSession', (session) => broadcast('lcu:game-session', session))
 
   // Only the time-sensitive transition gets an OS notification — everything
   // else is covered by the in-app activity feed.
@@ -124,6 +127,10 @@ function registerRuneBookBridge(): void {
   ipcMain.handle('rune-book:get', () => runeBookStore.readBook())
   ipcMain.handle('rune-book:save-page', (_event, page: unknown) => runeBookStore.savePage(page))
   ipcMain.handle('rune-book:delete-page', (_event, id: unknown) => runeBookStore.deletePage(id))
+}
+
+function registerRankHistoryBridge(): void {
+  ipcMain.handle('rank-history:get', () => rankHistoryStore.readHistory())
 }
 
 function registerUpdaterBridge(): void {
@@ -186,6 +193,7 @@ app.whenReady().then(async () => {
   createWindow(await resolveInitialTheme())
   registerLcuBridge()
   registerRuneBookBridge()
+  registerRankHistoryBridge()
   registerUpdaterBridge()
 
   app.on('activate', async () => {

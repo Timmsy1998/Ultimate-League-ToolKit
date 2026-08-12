@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
+import { AssetIcon } from '@renderer/components/AssetIcon/AssetIcon'
 import type { ChampionSummary } from '../../../../shared/lcu-types'
-import { AssetIcon } from './AssetIcon'
 import styles from './ChampionPicker.module.css'
 
 interface ChampionPickerProps {

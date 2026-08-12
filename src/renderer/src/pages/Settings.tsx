@@ -1,7 +1,7 @@
 import { CheckCircle2, Loader2, Monitor, Moon, RefreshCw, Sun } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { Toggle } from '@renderer/components/Toggle/Toggle'
 import { useSettings } from '@renderer/settings/SettingsContext'
+import { useAppVersion } from '@renderer/updater/useAppVersion'
 import { useUpdater } from '@renderer/updater/UpdaterContext'
 import type { ThemePreference } from '../../../shared/settings-types'
 import styles from './Page.module.css'
@@ -12,22 +12,6 @@ const THEMES: { id: ThemePreference; label: string; icon: typeof Moon }[] = [
   { id: 'light', label: 'Light', icon: Sun },
   { id: 'system', label: 'System', icon: Monitor }
 ]
-
-function useAppVersion(): string {
-  const [version, setVersion] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-    window.api.app.getVersion().then((v) => {
-      if (!cancelled) setVersion(v)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  return version
-}
 
 function updateStatusText(state: ReturnType<typeof useUpdater>['state']): string {
   switch (state.status) {

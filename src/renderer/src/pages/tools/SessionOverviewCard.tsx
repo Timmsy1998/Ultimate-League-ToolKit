@@ -2,19 +2,10 @@ import { useEffect, useState } from 'react'
 import { Clock } from 'lucide-react'
 import { Card } from '@renderer/components/Card/Card'
 import { EmptyState } from '@renderer/components/EmptyState/EmptyState'
+import { formatElapsed } from '@renderer/lcu/formatElapsed'
 import { useLcu } from '@renderer/lcu/LcuContext'
 import { PHASE_LABELS } from '@renderer/lcu/phaseLabels'
 import toolStyles from '../Tools.module.css'
-
-function formatElapsed(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  if (hours > 0) return `${hours}h ${minutes}m`
-  if (minutes > 0) return `${minutes}m ${seconds}s`
-  return `${seconds}s`
-}
 
 export function SessionOverviewCard(): React.JSX.Element {
   const { status, summoner, phase, activity, connectedAt } = useLcu()

@@ -1,4 +1,4 @@
-import { useLcuAsset } from './useLcuAsset'
+import { useLcuAsset } from '@renderer/lcu/useLcuAsset'
 import styles from './AssetIcon.module.css'
 
 interface AssetIconProps {

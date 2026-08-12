@@ -3,14 +3,17 @@ import type {
   ActivityEntry,
   ChampionSummary,
   GameflowPhase,
+  GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
   LcuSnapshot,
   PerkCatalog,
+  RankedStats,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
 } from '../shared/lcu-types'
+import type { RankHistory } from '../shared/rank-history-types'
 import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
@@ -36,6 +39,8 @@ const lcu = {
   onPhase: (cb: (phase: GameflowPhase) => void) => subscribe('lcu:phase', cb),
   onActivity: (cb: (activity: ActivityEntry[]) => void) => subscribe('lcu:activity', cb),
   onConnectedAt: (cb: (connectedAt: number | null) => void) => subscribe('lcu:connected-at', cb),
+  onRanked: (cb: (ranked: RankedStats | null) => void) => subscribe('lcu:ranked', cb),
+  onGameSession: (cb: (session: GameSessionInfo | null) => void) => subscribe('lcu:game-session', cb),
   getRunePages: (): Promise<RunePageSummary[]> => ipcRenderer.invoke('lcu:get-rune-pages'),
   getMatchHistory: (): Promise<MatchSummary[]> => ipcRenderer.invoke('lcu:get-match-history'),
   getPerkCatalog: (): Promise<PerkCatalog> => ipcRenderer.invoke('lcu:get-perk-catalog'),
@@ -54,6 +59,10 @@ const runeBook = {
   get: (): Promise<RuneBook> => ipcRenderer.invoke('rune-book:get'),
   savePage: (page: RuneBookPage): Promise<RuneBook> => ipcRenderer.invoke('rune-book:save-page', page),
   deletePage: (id: string): Promise<RuneBook> => ipcRenderer.invoke('rune-book:delete-page', id)
+}
+
+const rankHistory = {
+  get: (): Promise<RankHistory> => ipcRenderer.invoke('rank-history:get')
 }
 
 const theme = {
@@ -79,7 +88,7 @@ const appInfo = {
   getVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version')
 }
 
-const api = { lcu, settings, runeBook, theme, updater, app: appInfo }
+const api = { lcu, settings, runeBook, rankHistory, theme, updater, app: appInfo }
 
 if (process.contextIsolated) {
   try {

@@ -41,12 +41,34 @@ export interface LcuEvent {
   data: unknown
 }
 
+export interface RankedEntry {
+  tier: string
+  division: string
+  leaguePoints: number
+  wins: number
+  losses: number
+  isProvisional: boolean
+}
+
+export interface RankedStats {
+  soloDuo: RankedEntry | null
+  flex: RankedEntry | null
+}
+
+export interface GameSessionInfo {
+  queueName: string
+  gameMode: string
+  mapName: string
+}
+
 export interface LcuSnapshot {
   status: ConnectionStatus
   summoner: SummonerInfo | null
   phase: GameflowPhase
   activity: ActivityEntry[]
   connectedAt: number | null
+  ranked: RankedStats | null
+  gameSession: GameSessionInfo | null
 }
 
 export interface RunePageSummary {
