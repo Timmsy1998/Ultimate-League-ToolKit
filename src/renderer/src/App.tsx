@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ErrorBoundary } from '@renderer/components/ErrorBoundary/ErrorBoundary'
 import { Sidebar, type PageId } from '@renderer/components/Sidebar/Sidebar'
 import { TitleBar } from '@renderer/components/TitleBar/TitleBar'
 import { UpdateBanner } from '@renderer/components/UpdateBanner/UpdateBanner'
@@ -52,7 +53,9 @@ function Shell(): React.JSX.Element {
           <div className={styles.body}>
             <Sidebar active={page} onNavigate={setPage} />
             <main className={styles.content}>
-              <ActivePage />
+              <ErrorBoundary key={page}>
+                <ActivePage />
+              </ErrorBoundary>
             </main>
           </div>
         </div>
