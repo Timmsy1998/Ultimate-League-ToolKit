@@ -6,6 +6,8 @@ import { LcuHttpClient } from './http-client'
 import { fetchAssetDataUri } from './assets'
 import { fetchChampions } from './champions'
 import { createLimiter } from './concurrency-limit'
+import { fetchGameSession } from './game-session'
+import { fetchRankedStats } from './ranked'
 import { fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
 import { fetchMatchHistory } from './match-history'
 import type {
@@ -13,11 +15,13 @@ import type {
   ChampionSummary,
   ConnectionStatus,
   GameflowPhase,
+  GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
   LcuEvent,
   LcuSnapshot,
   PerkCatalog,
+  RankedStats,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
@@ -43,6 +47,8 @@ export declare interface LcuConnectionManager {
   on(event: 'phase', listener: (phase: GameflowPhase) => void): this
   on(event: 'activity', listener: (entries: ActivityEntry[]) => void): this
   on(event: 'connectedAt', listener: (connectedAt: number | null) => void): this
+  on(event: 'ranked', listener: (ranked: RankedStats | null) => void): this
+  on(event: 'gameSession', listener: (session: GameSessionInfo | null) => void): this
 }
 
 export class LcuConnectionManager extends EventEmitter {
@@ -51,6 +57,8 @@ export class LcuConnectionManager extends EventEmitter {
   private phase: GameflowPhase = 'None'
   private activity: ActivityEntry[] = []
   private connectedAt: number | null = null
+  private ranked: RankedStats | null = null
+  private gameSession: GameSessionInfo | null = null
 
   private pollTimer: NodeJS.Timeout | null = null
   private tick = 0
@@ -82,7 +90,9 @@ export class LcuConnectionManager extends EventEmitter {
       summoner: this.summoner,
       phase: this.phase,
       activity: this.activity,
-      connectedAt: this.connectedAt
+      connectedAt: this.connectedAt,
+      ranked: this.ranked,
+      gameSession: this.gameSession
     }
   }
 
@@ -182,6 +192,10 @@ export class LcuConnectionManager extends EventEmitter {
       this.setStatus('online')
       this.setConnectedAt(Date.now())
       this.pushActivity('Connected to League Client')
+      // setPhase() above already triggers a game-session refresh on every
+      // call; ranked stats only need an explicit kick here since setPhase
+      // only refreshes those for the None/Lobby phases.
+      void this.refreshRanked()
     } catch {
       // Socket came up but the initial fetch failed — client is probably
       // still starting. Treat it the same as a dropped connection.
@@ -196,6 +210,8 @@ export class LcuConnectionManager extends EventEmitter {
     this.setSummoner(null)
     this.setPhase('None')
     this.setConnectedAt(null)
+    this.setRanked(null)
+    this.setGameSession(null)
     this.schedulePoll(POLL_INTERVAL_MS)
   }
 
@@ -224,6 +240,36 @@ export class LcuConnectionManager extends EventEmitter {
     this.emit('phase', phase)
     const message = PHASE_ACTIVITY_MESSAGES[phase]
     if (message) this.pushActivity(message)
+
+    void this.refreshGameSession()
+    // Ranked LP only actually changes once a game finishes and the client
+    // settles back at the menu/lobby — refetching on every phase change
+    // would just repeat the same numbers.
+    if (phase === 'None' || phase === 'Lobby') void this.refreshRanked()
+  }
+
+  private setRanked(ranked: RankedStats | null): void {
+    this.ranked = ranked
+    this.emit('ranked', ranked)
+  }
+
+  private setGameSession(session: GameSessionInfo | null): void {
+    this.gameSession = session
+    this.emit('gameSession', session)
+  }
+
+  private async refreshRanked(): Promise<void> {
+    if (!this.client) return
+    try {
+      this.setRanked(await fetchRankedStats(this.client))
+    } catch {
+      this.setRanked(null)
+    }
+  }
+
+  private async refreshGameSession(): Promise<void> {
+    if (!this.client) return
+    this.setGameSession(await fetchGameSession(this.client))
   }
 
   private setConnectedAt(connectedAt: number | null): void {

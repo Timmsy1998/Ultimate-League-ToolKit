@@ -17,12 +17,6 @@
   animation: iconIn 180ms ease-out;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .icon {
-    animation: none;
-  }
-}
-
 .round {
   border-radius: 999px;
 }
@@ -34,4 +28,10 @@
   font-family: var(--font-mono);
   font-weight: 600;
   color: var(--text-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon {
+    animation: none;
+  }
 }

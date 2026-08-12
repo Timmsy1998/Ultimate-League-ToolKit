@@ -94,6 +94,8 @@ function registerLcuBridge(): void {
   lcuManager.on('phase', (phase) => broadcast('lcu:phase', phase))
   lcuManager.on('activity', (activity) => broadcast('lcu:activity', activity))
   lcuManager.on('connectedAt', (connectedAt) => broadcast('lcu:connected-at', connectedAt))
+  lcuManager.on('ranked', (ranked) => broadcast('lcu:ranked', ranked))
+  lcuManager.on('gameSession', (session) => broadcast('lcu:game-session', session))
 
   // Only the time-sensitive transition gets an OS notification — everything
   // else is covered by the in-app activity feed.

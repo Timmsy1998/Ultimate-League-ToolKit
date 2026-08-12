@@ -2,10 +2,12 @@ import type {
   ActivityEntry,
   ChampionSummary,
   GameflowPhase,
+  GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
   LcuSnapshot,
   PerkCatalog,
+  RankedStats,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
@@ -21,6 +23,8 @@ export interface LcuBridge {
   onPhase: (cb: (phase: GameflowPhase) => void) => () => void
   onActivity: (cb: (activity: ActivityEntry[]) => void) => () => void
   onConnectedAt: (cb: (connectedAt: number | null) => void) => () => void
+  onRanked: (cb: (ranked: RankedStats | null) => void) => () => void
+  onGameSession: (cb: (session: GameSessionInfo | null) => void) => () => void
   getRunePages: () => Promise<RunePageSummary[]>
   getMatchHistory: () => Promise<MatchSummary[]>
   getPerkCatalog: () => Promise<PerkCatalog>

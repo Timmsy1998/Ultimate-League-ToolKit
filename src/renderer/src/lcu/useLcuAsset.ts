@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
 // Module-level so the cache survives remounts (e.g. scrolling a champion
-// list in and out of view) for the lifetime of the renderer — icons are
-// already cached again on the main-process side, this just skips the
-// repeat IPC round-trip.
+// list in and out of view, or navigating away and back) for the lifetime
+// of the renderer — icons are already cached again on the main-process
+// side, this just skips the repeat IPC round-trip.
 const cache = new Map<string, string>()
 const inflight = new Map<string, Promise<string>>()
 
