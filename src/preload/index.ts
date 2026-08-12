@@ -1,5 +1,17 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { ActivityEntry, GameflowPhase, LcuSnapshot, RunePageSummary, MatchSummary, SummonerInfo } from '../shared/lcu-types'
+import type {
+  ActivityEntry,
+  ChampionSummary,
+  GameflowPhase,
+  ImportRunePageRequest,
+  ImportRunePageResult,
+  LcuSnapshot,
+  PerkCatalog,
+  RunePageSummary,
+  MatchSummary,
+  SummonerInfo
+} from '../shared/lcu-types'
+import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
 
@@ -25,12 +37,23 @@ const lcu = {
   onActivity: (cb: (activity: ActivityEntry[]) => void) => subscribe('lcu:activity', cb),
   onConnectedAt: (cb: (connectedAt: number | null) => void) => subscribe('lcu:connected-at', cb),
   getRunePages: (): Promise<RunePageSummary[]> => ipcRenderer.invoke('lcu:get-rune-pages'),
-  getMatchHistory: (): Promise<MatchSummary[]> => ipcRenderer.invoke('lcu:get-match-history')
+  getMatchHistory: (): Promise<MatchSummary[]> => ipcRenderer.invoke('lcu:get-match-history'),
+  getPerkCatalog: (): Promise<PerkCatalog> => ipcRenderer.invoke('lcu:get-perk-catalog'),
+  getChampions: (): Promise<ChampionSummary[]> => ipcRenderer.invoke('lcu:get-champions'),
+  getAsset: (path: string): Promise<string> => ipcRenderer.invoke('lcu:get-asset', path),
+  importRunePage: (request: ImportRunePageRequest): Promise<ImportRunePageResult> =>
+    ipcRenderer.invoke('lcu:import-rune-page', request)
 }
 
 const settings = {
   get: (): Promise<Settings> => ipcRenderer.invoke('settings:get'),
   set: (partial: Partial<Settings>): Promise<Settings> => ipcRenderer.invoke('settings:set', partial)
+}
+
+const runeBook = {
+  get: (): Promise<RuneBook> => ipcRenderer.invoke('rune-book:get'),
+  savePage: (page: RuneBookPage): Promise<RuneBook> => ipcRenderer.invoke('rune-book:save-page', page),
+  deletePage: (id: string): Promise<RuneBook> => ipcRenderer.invoke('rune-book:delete-page', id)
 }
 
 const theme = {
@@ -56,7 +79,7 @@ const appInfo = {
   getVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version')
 }
 
-const api = { lcu, settings, theme, updater, app: appInfo }
+const api = { lcu, settings, runeBook, theme, updater, app: appInfo }
 
 if (process.contextIsolated) {
   try {

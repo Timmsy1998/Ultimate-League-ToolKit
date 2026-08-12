@@ -3,14 +3,21 @@ import { EventEmitter } from 'node:events'
 import { findLcuCredentials } from './credentials'
 import { LcuEventSocket } from './event-socket'
 import { LcuHttpClient } from './http-client'
-import { fetchRunePages } from './rune-pages'
+import { fetchAssetDataUri } from './assets'
+import { fetchChampions } from './champions'
+import { createLimiter } from './concurrency-limit'
+import { fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
 import { fetchMatchHistory } from './match-history'
 import type {
   ActivityEntry,
+  ChampionSummary,
   ConnectionStatus,
   GameflowPhase,
+  ImportRunePageRequest,
+  ImportRunePageResult,
   LcuEvent,
   LcuSnapshot,
+  PerkCatalog,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
@@ -50,6 +57,11 @@ export class LcuConnectionManager extends EventEmitter {
   private client: LcuHttpClient | null = null
   private socket: LcuEventSocket | null = null
   private stopped = true
+  // Icons don't change within a running session — keyed by asset path, kept
+  // for the lifetime of the app rather than cleared on reconnect.
+  private readonly assetCache = new Map<string, string>()
+  private readonly assetInflight = new Map<string, Promise<string>>()
+  private readonly limitAssetFetch = createLimiter(6)
 
   start(): void {
     this.stopped = false
@@ -86,6 +98,51 @@ export class LcuConnectionManager extends EventEmitter {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
     return fetchMatchHistory(this.client, this.summoner.summonerId, count)
+  }
+
+  getPerkCatalog(): Promise<PerkCatalog> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchPerkCatalog(this.client)
+  }
+
+  getChampions(): Promise<ChampionSummary[]> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchChampions(this.client)
+  }
+
+  async getAsset(path: string): Promise<string> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    const cached = this.assetCache.get(path)
+    if (cached) return cached
+
+    const inflight = this.assetInflight.get(path)
+    if (inflight) return inflight
+
+    const client = this.client
+    const fetchPromise = this.limitAssetFetch(() => fetchAssetDataUri(client, path))
+      .then((dataUri) => {
+        this.assetCache.set(path, dataUri)
+        return dataUri
+      })
+      .finally(() => {
+        this.assetInflight.delete(path)
+      })
+
+    this.assetInflight.set(path, fetchPromise)
+    return fetchPromise
+  }
+
+  importRunePage(request: ImportRunePageRequest): Promise<ImportRunePageResult> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return importRunePage(this.client, request)
   }
 
   private schedulePoll(delay: number): void {

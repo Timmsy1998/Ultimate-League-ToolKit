@@ -6,6 +6,7 @@ import { LcuProvider } from '@renderer/lcu/LcuContext'
 import { About } from '@renderer/pages/About'
 import { Dashboard } from '@renderer/pages/Dashboard'
 import { Notifications } from '@renderer/pages/Notifications'
+import { RuneBook } from '@renderer/pages/RuneBook'
 import { Settings } from '@renderer/pages/Settings'
 import { Tools } from '@renderer/pages/Tools'
 import { SettingsProvider } from '@renderer/settings/SettingsContext'
@@ -17,6 +18,7 @@ const PAGES: Record<PageId, React.ComponentType> = {
   dashboard: Dashboard,
   notifications: Notifications,
   tools: Tools,
+  'rune-book': RuneBook,
   settings: Settings,
   about: About
 }

@@ -14,6 +14,7 @@ shell and UI; LCU integration comes next.
 - [x] UI shell — navigation, pages, theming
 - [x] LCU client connection
 - [x] First tools (match history, rune pages, session overview)
+- [x] Rune page builder — build pages per champion and import them into the client
 - [x] Auto-update pipeline
 - [ ] Packaged installer
 

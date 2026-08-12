@@ -1,4 +1,16 @@
-import type { ActivityEntry, GameflowPhase, LcuSnapshot, RunePageSummary, MatchSummary, SummonerInfo } from '../shared/lcu-types'
+import type {
+  ActivityEntry,
+  ChampionSummary,
+  GameflowPhase,
+  ImportRunePageRequest,
+  ImportRunePageResult,
+  LcuSnapshot,
+  PerkCatalog,
+  RunePageSummary,
+  MatchSummary,
+  SummonerInfo
+} from '../shared/lcu-types'
+import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
 
@@ -11,11 +23,21 @@ export interface LcuBridge {
   onConnectedAt: (cb: (connectedAt: number | null) => void) => () => void
   getRunePages: () => Promise<RunePageSummary[]>
   getMatchHistory: () => Promise<MatchSummary[]>
+  getPerkCatalog: () => Promise<PerkCatalog>
+  getChampions: () => Promise<ChampionSummary[]>
+  getAsset: (path: string) => Promise<string>
+  importRunePage: (request: ImportRunePageRequest) => Promise<ImportRunePageResult>
 }
 
 export interface SettingsBridge {
   get: () => Promise<Settings>
   set: (partial: Partial<Settings>) => Promise<Settings>
+}
+
+export interface RuneBookBridge {
+  get: () => Promise<RuneBook>
+  savePage: (page: RuneBookPage) => Promise<RuneBook>
+  deletePage: (id: string) => Promise<RuneBook>
 }
 
 export interface ThemeBridge {
@@ -38,6 +60,7 @@ declare global {
     api: {
       lcu: LcuBridge
       settings: SettingsBridge
+      runeBook: RuneBookBridge
       theme: ThemeBridge
       updater: UpdaterBridge
       app: AppInfoBridge
