@@ -1,11 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import type { Settings } from '../../../shared/settings-types'
-
-const DEFAULT_SETTINGS: Settings = {
-  theme: 'dark',
-  launchOnStartup: false,
-  notificationsEnabled: true
-}
+import { DEFAULT_SETTINGS, type Settings } from '../../../shared/settings-types'
 
 interface SettingsContextValue {
   settings: Settings

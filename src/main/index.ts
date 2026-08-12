@@ -89,6 +89,24 @@ function broadcast(channel: string, ...args: unknown[]): void {
   mainWindow?.webContents.send(channel, ...args)
 }
 
+// Auto-accept is opt-in and best-effort — if it fails for any reason (LCU
+// endpoint hiccup, no client, etc.) this falls back to the normal notify so
+// the user still gets prompted to accept manually rather than missing the
+// queue pop silently.
+async function handleReadyCheck(): Promise<void> {
+  const settings = await readSettings()
+  if (settings.autoAcceptReadyCheck) {
+    try {
+      await lcuManager.acceptReadyCheck()
+      void notify({ title: 'Ready check', body: 'Auto-accepted — good luck!' })
+      return
+    } catch {
+      // fall through to the manual-accept notification below
+    }
+  }
+  void notify({ title: 'Ready check', body: 'Your match is ready — accept in the League Client.' })
+}
+
 function registerLcuBridge(): void {
   lcuManager.on('status', (status) => broadcast('lcu:status', status))
   lcuManager.on('summoner', (summoner) => broadcast('lcu:summoner', summoner))
@@ -101,9 +119,7 @@ function registerLcuBridge(): void {
   // Only the time-sensitive transition gets an OS notification — everything
   // else is covered by the in-app activity feed.
   lcuManager.on('phase', (phase) => {
-    if (phase === 'ReadyCheck') {
-      void notify({ title: 'Ready check', body: 'Your match is ready — accept in the League Client.' })
-    }
+    if (phase === 'ReadyCheck') void handleReadyCheck()
   })
 
   ipcMain.handle('lcu:get-snapshot', () => lcuManager.getSnapshot())

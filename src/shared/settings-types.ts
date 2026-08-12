@@ -4,10 +4,12 @@ export interface Settings {
   theme: ThemePreference
   launchOnStartup: boolean
   notificationsEnabled: boolean
+  autoAcceptReadyCheck: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'dark',
   launchOnStartup: false,
-  notificationsEnabled: true
+  notificationsEnabled: true,
+  autoAcceptReadyCheck: false
 }

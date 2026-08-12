@@ -106,6 +106,20 @@ export function Settings(): React.JSX.Element {
               label="Notifications"
             />
           </div>
+          <div className={settingsStyles.divider} />
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Auto-accept ready check</p>
+              <p className={settingsStyles.rowDescription}>
+                Automatically accept queue pop-ups the instant they appear.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.autoAcceptReadyCheck}
+              onChange={(checked) => updateSettings({ autoAcceptReadyCheck: checked })}
+              label="Auto-accept ready check"
+            />
+          </div>
         </div>
       </section>
 

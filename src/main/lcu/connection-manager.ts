@@ -158,6 +158,13 @@ export class LcuConnectionManager extends EventEmitter {
     return importRunePage(this.client, request)
   }
 
+  async acceptReadyCheck(): Promise<void> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    await this.client.post('/lol-matchmaking/v1/ready-check/accept', undefined)
+  }
+
   private schedulePoll(delay: number): void {
     if (this.stopped) return
     this.pollTimer = setTimeout(() => void this.poll(), delay)
