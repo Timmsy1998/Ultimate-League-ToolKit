@@ -10,6 +10,7 @@ import { fetchGameSession } from './game-session'
 import { fetchRankedStats } from './ranked'
 import { fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
 import { fetchMatchHistory } from './match-history'
+import * as rankHistoryStore from '../rank-history/store'
 import type {
   ActivityEntry,
   ChampionSummary,
@@ -21,11 +22,13 @@ import type {
   LcuEvent,
   LcuSnapshot,
   PerkCatalog,
+  RankedEntry,
   RankedStats,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
 } from '../../shared/lcu-types'
+import type { RankedQueueId } from '../../shared/rank-history-types'
 import { isGameflowPhase, isSummonerInfo } from './validate'
 
 const POLL_INTERVAL_MS = 3000
@@ -261,10 +264,41 @@ export class LcuConnectionManager extends EventEmitter {
   private async refreshRanked(): Promise<void> {
     if (!this.client) return
     try {
-      this.setRanked(await fetchRankedStats(this.client))
+      const next = await fetchRankedStats(this.client)
+      this.recordRankChanges(next)
+      this.setRanked(next)
     } catch {
       this.setRanked(null)
     }
+  }
+
+  private recordRankChanges(next: RankedStats): void {
+    this.maybeSnapshotQueue('soloDuo', this.ranked?.soloDuo ?? null, next.soloDuo)
+    this.maybeSnapshotQueue('flex', this.ranked?.flex ?? null, next.flex)
+  }
+
+  // Only appends when something actually changed since the last known
+  // value (or nothing was known yet) — a snapshot on every poll would just
+  // repeat identical numbers between games.
+  private maybeSnapshotQueue(queue: RankedQueueId, previous: RankedEntry | null, next: RankedEntry | null): void {
+    if (!next) return
+    const changed =
+      !previous ||
+      previous.tier !== next.tier ||
+      previous.division !== next.division ||
+      previous.leaguePoints !== next.leaguePoints ||
+      previous.wins !== next.wins ||
+      previous.losses !== next.losses
+    if (!changed) return
+
+    void rankHistoryStore.appendSnapshot(queue, {
+      timestamp: Date.now(),
+      tier: next.tier,
+      division: next.division,
+      leaguePoints: next.leaguePoints,
+      wins: next.wins,
+      losses: next.losses
+    })
   }
 
   private async refreshGameSession(): Promise<void> {

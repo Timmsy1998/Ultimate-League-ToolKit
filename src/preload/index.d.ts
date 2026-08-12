@@ -12,6 +12,7 @@ import type {
   MatchSummary,
   SummonerInfo
 } from '../shared/lcu-types'
+import type { RankHistory } from '../shared/rank-history-types'
 import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
@@ -44,6 +45,10 @@ export interface RuneBookBridge {
   deletePage: (id: string) => Promise<RuneBook>
 }
 
+export interface RankHistoryBridge {
+  get: () => Promise<RankHistory>
+}
+
 export interface ThemeBridge {
   reportEffective: (value: 'dark' | 'light') => void
 }
@@ -65,6 +70,7 @@ declare global {
       lcu: LcuBridge
       settings: SettingsBridge
       runeBook: RuneBookBridge
+      rankHistory: RankHistoryBridge
       theme: ThemeBridge
       updater: UpdaterBridge
       app: AppInfoBridge

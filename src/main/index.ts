@@ -4,6 +4,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { LcuConnectionManager } from './lcu/connection-manager'
 import { isAllowedAssetPath, isImportRunePageRequest } from './lcu/validate'
 import { notify } from './notifications/notifier'
+import * as rankHistoryStore from './rank-history/store'
 import * as runeBookStore from './rune-book/store'
 import { readSettings, writeSettings } from './settings/store'
 import { appUpdater } from './updater/auto-updater'
@@ -128,6 +129,10 @@ function registerRuneBookBridge(): void {
   ipcMain.handle('rune-book:delete-page', (_event, id: unknown) => runeBookStore.deletePage(id))
 }
 
+function registerRankHistoryBridge(): void {
+  ipcMain.handle('rank-history:get', () => rankHistoryStore.readHistory())
+}
+
 function registerUpdaterBridge(): void {
   appUpdater.on('state', (state) => broadcast('update:state', state))
 
@@ -188,6 +193,7 @@ app.whenReady().then(async () => {
   createWindow(await resolveInitialTheme())
   registerLcuBridge()
   registerRuneBookBridge()
+  registerRankHistoryBridge()
   registerUpdaterBridge()
 
   app.on('activate', async () => {

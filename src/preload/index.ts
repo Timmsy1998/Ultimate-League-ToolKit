@@ -13,6 +13,7 @@ import type {
   MatchSummary,
   SummonerInfo
 } from '../shared/lcu-types'
+import type { RankHistory } from '../shared/rank-history-types'
 import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
@@ -60,6 +61,10 @@ const runeBook = {
   deletePage: (id: string): Promise<RuneBook> => ipcRenderer.invoke('rune-book:delete-page', id)
 }
 
+const rankHistory = {
+  get: (): Promise<RankHistory> => ipcRenderer.invoke('rank-history:get')
+}
+
 const theme = {
   // Fire-and-forget: lets main keep the native titlebar overlay in sync
   // with the resolved (post-'system') theme. No response expected.
@@ -83,7 +88,7 @@ const appInfo = {
   getVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version')
 }
 
-const api = { lcu, settings, runeBook, theme, updater, app: appInfo }
+const api = { lcu, settings, runeBook, rankHistory, theme, updater, app: appInfo }
 
 if (process.contextIsolated) {
   try {

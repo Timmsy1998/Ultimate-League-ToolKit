@@ -1,10 +1,11 @@
-import { Bell, Gauge, Info, NotebookPen, PlugZap, Settings, Wrench } from 'lucide-react'
+import { Bell, Gauge, Info, NotebookPen, PlugZap, Settings, Trophy, Wrench } from 'lucide-react'
 import styles from './Sidebar.module.css'
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: Gauge },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'tools', label: 'Tools', icon: Wrench },
+  { id: 'rank', label: 'Rank', icon: Trophy },
   { id: 'rune-book', label: 'Rune book', icon: NotebookPen },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'about', label: 'About', icon: Info }

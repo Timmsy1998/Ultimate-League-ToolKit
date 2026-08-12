@@ -39,6 +39,7 @@ const STATUS_PILL: Record<string, { status: Status; label: string }> = {
 }
 
 const QUICK_ACTIONS: { id: PageId; icon: LucideIcon; title: string; description: string }[] = [
+  { id: 'rank', icon: Trophy, title: 'Rank', description: 'LP history & full stats' },
   { id: 'rune-book', icon: NotebookPen, title: 'Rune book', description: 'Build and import rune pages' },
   { id: 'tools', icon: Wrench, title: 'Tools', description: 'Match history, session stats & more' },
   { id: 'notifications', icon: BellRing, title: 'Notifications', description: 'Ready checks & queue activity' },
