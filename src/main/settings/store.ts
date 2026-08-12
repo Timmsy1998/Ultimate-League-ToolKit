@@ -18,6 +18,7 @@ function isPartialSettings(value: unknown): value is Partial<Settings> {
   if ('theme' in v && !['dark', 'light', 'system'].includes(v.theme as string)) return false
   if ('launchOnStartup' in v && typeof v.launchOnStartup !== 'boolean') return false
   if ('notificationsEnabled' in v && typeof v.notificationsEnabled !== 'boolean') return false
+  if ('autoAcceptReadyCheck' in v && typeof v.autoAcceptReadyCheck !== 'boolean') return false
   return true
 }
 
