@@ -17,6 +17,10 @@ dist-electron/
 out/
 release/
 
+# Built by scripts/build-pengu-core.mjs (or CI) from native/vendor/pengu-loader
+# — never committed, same as the rest of the electron-builder output.
+resources/pengu-core/
+
 # Env / secrets
 .env
 .env.*

@@ -66,6 +66,9 @@ export interface ThemeBridge {
 
 export interface ClientThemeBridge {
   apply: () => Promise<void>
+  enable: () => Promise<void>
+  disable: () => Promise<void>
+  status: () => Promise<boolean>
 }
 
 export interface UpdaterBridge {
