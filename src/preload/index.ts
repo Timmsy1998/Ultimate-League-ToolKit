@@ -47,7 +47,8 @@ const lcu = {
   getChampions: (): Promise<ChampionSummary[]> => ipcRenderer.invoke('lcu:get-champions'),
   getAsset: (path: string): Promise<string> => ipcRenderer.invoke('lcu:get-asset', path),
   importRunePage: (request: ImportRunePageRequest): Promise<ImportRunePageResult> =>
-    ipcRenderer.invoke('lcu:import-rune-page', request)
+    ipcRenderer.invoke('lcu:import-rune-page', request),
+  leaveLobby: (): Promise<void> => ipcRenderer.invoke('lcu:leave-lobby')
 }
 
 const settings = {

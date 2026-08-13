@@ -124,6 +124,25 @@ export function Settings(): React.JSX.Element {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Tools</h2>
+        <div className={settingsStyles.panel}>
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Dodge button</p>
+              <p className={settingsStyles.rowDescription}>
+                Show a Leave Lobby / Dodge card on the Tools page for backing out before a game starts.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.dodgeToolEnabled}
+              onChange={(checked) => updateSettings({ dodgeToolEnabled: checked })}
+              label="Dodge button"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.sectionTitle}>About</h2>
         <div className={settingsStyles.panel}>
           <div className={settingsStyles.row}>
