@@ -1,0 +1,103 @@
+name: Retry Signing
+
+# Manually rebuilds and signs the installer for an *already-published*
+# release, then attaches it — bypassing semantic-release entirely.
+#
+# Why this exists: release.yml's build/sign/publish steps are gated on
+# semantic-release's own new_release_published output, which is only ever
+# true once per version. If signing fails after that — a bug, or a
+# transient SignPath outage — the release is left permanently stuck with
+# no installer attached, since nothing re-triggers those steps on a later
+# run for the same version (re-running the release.yml job just finds
+# nothing new to publish and skips everything again). This workflow
+# provides the missing "just try signing again" path, decoupled from
+# publishing a new version.
+#
+# Deliberately a separate file rather than folded into release.yml as a
+# second job: that file has already had several real wiring bugs this
+# project's history, and restructuring it further while trying to fix an
+# active signing failure is exactly the kind of change likely to introduce
+# another one. The build/sign/publish steps below are intentionally near-
+# identical to release.yml's — worth consolidating later (e.g. into a
+# shared reusable workflow) once this has proven itself, not right now.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build, sign, and attach an installer to (e.g. v1.0.2)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  retry-signing:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      # package.json stays "0.0.0-development" in source control (see
+      # release.yml) — stamp the real version for this build/manifest the
+      # same way the normal release flow does.
+      - name: Set build version
+        shell: bash
+        run: |
+          version="${{ inputs.tag }}"
+          npm version "${version#v}" --no-git-tag-version --allow-same-version
+
+      - name: Build installer (unsigned)
+        run: npm run build:win
+
+      - name: Upload unsigned installer for signing
+        id: upload-unsigned-installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer
+          path: release/*-setup.exe
+          retention-days: 1
+
+      - name: Submit to SignPath
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'default' }}
+          github-artifact-id: ${{ steps.upload-unsigned-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Restore signed installer and fix update manifest
+        shell: bash
+        run: |
+          cp signed/*-setup.exe release/
+          node scripts/fix-latest-yml.mjs
+
+      - name: Publish release assets
+        shell: bash
+        run: gh release upload "${{ inputs.tag }}" release/*-setup.exe release/latest.yml --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
