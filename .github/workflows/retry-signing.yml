@@ -42,6 +42,14 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      # The old tag's commit predates this script (or any future fix to
+      # it) — signing tooling isn't part of what got released, so it
+      # shouldn't be pinned to what existed back then. Restore just this
+      # one file from whatever ref this workflow itself is running from.
+      - name: Use current signing script
+        shell: bash
+        run: git show ${{ github.sha }}:scripts/sign-with-signpath.ps1 > scripts/sign-with-signpath.ps1
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
