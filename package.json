@@ -13,7 +13,10 @@
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "icons": "node scripts/generate-icons.mjs",
+    "build:pengu-core": "node scripts/build-pengu-core.mjs",
+    "predist:win": "npm run build:pengu-core",
     "dist:win": "electron-vite build && electron-builder --win",
+    "prebuild:win": "npm run build:pengu-core",
     "build:win": "electron-vite build && electron-builder --win --publish never"
   },
   "dependencies": {

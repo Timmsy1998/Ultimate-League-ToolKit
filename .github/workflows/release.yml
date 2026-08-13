@@ -14,6 +14,15 @@ name: Release
 #              named "default" in the SignPath project)
 # all of which come from a SignPath organization/project set up for this
 # repo — see https://signpath.io/solutions/open-source-community.
+#
+# The installer also bundles core.dll, built from the vendored PenguLoader
+# submodule (native/vendor/pengu-loader — see THIRD_PARTY_NOTICES.md).
+# "Build installer" below runs scripts/build-pengu-core.mjs automatically
+# via npm's prebuild:win lifecycle hook — that's why checkout pulls
+# submodules recursively (PenguLoader has its own nested cef-headers
+# submodule) and MSBuild gets set up first. With CI=true (set by GitHub
+# Actions automatically) that script fails the build if msbuild itself
+# fails, rather than the silent local-dev fallback it uses otherwise.
 on:
   push:
     branches: [master]
@@ -34,6 +43,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -42,6 +52,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
       # Creates the git tag and GitHub Release (with generated notes) if the
       # commits since the last release warrant one. package.json is never

@@ -89,7 +89,10 @@ const theme = {
 // Distinct from `theme` above — this is the League Client reskin feature
 // (CLAUDE.md §5a), not ULTK's own dark/light appearance.
 const clientTheme = {
-  apply: (): Promise<void> => ipcRenderer.invoke('client-theme:apply')
+  apply: (): Promise<void> => ipcRenderer.invoke('client-theme:apply'),
+  enable: (): Promise<void> => ipcRenderer.invoke('client-theme:enable'),
+  disable: (): Promise<void> => ipcRenderer.invoke('client-theme:disable'),
+  status: (): Promise<boolean> => ipcRenderer.invoke('client-theme:status')
 }
 
 const updater = {

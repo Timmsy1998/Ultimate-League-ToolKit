@@ -6,6 +6,13 @@ directories:
 files:
   - out/**/*
   - package.json
+# core.dll (vendored from PenguLoader, see THIRD_PARTY_NOTICES.md) is built
+# separately by CI (or locally via scripts/build-pengu-core.mjs) into
+# resources/pengu-core/ before electron-builder runs — not committed to the
+# repo, same as everything else electron-builder bundles from a build step.
+extraResources:
+  - from: resources/pengu-core
+    to: pengu-core
 win:
   target:
     - target: nsis

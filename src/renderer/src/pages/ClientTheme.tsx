@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Toggle } from '@renderer/components/Toggle/Toggle'
 import { useSettings } from '@renderer/settings/SettingsContext'
 import themeStyles from './ClientTheme.module.css'
@@ -65,12 +65,45 @@ function ImagePickerRow({ title, description, value, onPick, onClear }: ImagePic
 
 export function ClientTheme(): React.JSX.Element {
   const { settings, updateSettings } = useSettings()
+  const [injectorEnabled, setInjectorEnabled] = useState<boolean | null>(null)
+  const [injectorBusy, setInjectorBusy] = useState(false)
+  const [injectorStatus, setInjectorStatus] = useState<string | null>(null)
   const [applyStatus, setApplyStatus] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    window.api.clientTheme.status().then((enabled) => {
+      if (!cancelled) setInjectorEnabled(enabled)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function pickImage(field: ImageField, file: File): Promise<void> {
     const dataUri = await readImageAsDataUri(file)
     updateSettings({ [field]: dataUri })
+  }
+
+  async function toggleInjector(enable: boolean): Promise<void> {
+    setInjectorBusy(true)
+    setInjectorStatus(null)
+    try {
+      if (enable) {
+        await window.api.clientTheme.enable()
+        setInjectorEnabled(true)
+        setInjectorStatus('Enabled — close and reopen the League Client for it to take effect.')
+      } else {
+        await window.api.clientTheme.disable()
+        setInjectorEnabled(false)
+        setInjectorStatus('Disabled — close and reopen the League Client to restore the default look.')
+      }
+    } catch (err) {
+      setInjectorStatus(err instanceof Error ? err.message : 'Failed to update the client hook.')
+    } finally {
+      setInjectorBusy(false)
+    }
   }
 
   async function applyToClient(): Promise<void> {
@@ -78,7 +111,7 @@ export function ClientTheme(): React.JSX.Element {
     setApplyStatus(null)
     try {
       await window.api.clientTheme.apply()
-      setApplyStatus('Applied.')
+      setApplyStatus('Saved — takes effect next time the League Client (re)starts.')
     } catch (err) {
       setApplyStatus(err instanceof Error ? err.message : 'Failed to apply theme.')
     } finally {
@@ -97,6 +130,36 @@ export function ClientTheme(): React.JSX.Element {
           </p>
         </div>
       </div>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Client hook</h2>
+        <div className={settingsStyles.panel}>
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>
+                {injectorEnabled === null ? 'Checking status…' : injectorEnabled ? 'Enabled' : 'Not enabled'}
+              </p>
+              <p className={settingsStyles.rowDescription}>
+                {injectorStatus ??
+                  'Enabling asks for admin permission once (a Windows registry change) and only takes effect the next time you start the League Client. Disabling removes it the same way and fully restores the default client.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              className={settingsStyles.updateButton}
+              disabled={injectorBusy || injectorEnabled === null}
+              onClick={() => void toggleInjector(!injectorEnabled)}
+            >
+              {injectorBusy ? (
+                <RefreshCw size={14} strokeWidth={1.75} className={settingsStyles.spin} aria-hidden="true" />
+              ) : (
+                <ShieldCheck size={14} strokeWidth={1.75} aria-hidden="true" />
+              )}
+              {injectorEnabled ? 'Disable / restore default client' : 'Enable'}
+            </button>
+          </div>
+        </div>
+      </section>
 
       <section className={styles.section}>
         <div className={settingsStyles.panel}>
@@ -198,9 +261,9 @@ export function ClientTheme(): React.JSX.Element {
         <div className={settingsStyles.panel}>
           <div className={settingsStyles.row}>
             <div>
-              <p className={settingsStyles.rowTitle}>Apply to client</p>
+              <p className={settingsStyles.rowTitle}>Save theme</p>
               <p className={settingsStyles.rowDescription}>
-                {applyStatus ?? 'Push these settings to a running League Client.'}
+                {applyStatus ?? "Writes these settings to the client hook's plugin file."}
               </p>
             </div>
             <button
@@ -212,9 +275,9 @@ export function ClientTheme(): React.JSX.Element {
               {applying ? (
                 <RefreshCw size={14} strokeWidth={1.75} className={settingsStyles.spin} aria-hidden="true" />
               ) : (
-                <AlertTriangle size={14} strokeWidth={1.75} aria-hidden="true" />
+                <Check size={14} strokeWidth={1.75} aria-hidden="true" />
               )}
-              Apply to client
+              Save theme
             </button>
           </div>
         </div>

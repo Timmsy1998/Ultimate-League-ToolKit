@@ -1,0 +1,3 @@
+[submodule "native/vendor/pengu-loader"]
+	path = native/vendor/pengu-loader
+	url = https://github.com/PenguLoader/PenguLoader.git

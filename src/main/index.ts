@@ -1,7 +1,12 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, session, shell } from 'electron'
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { applyTheme } from './client-theme/injector-bridge'
+import {
+  applyTheme,
+  disable as disableClientTheme,
+  enable as enableClientTheme,
+  isEnabled as isClientThemeEnabled
+} from './client-theme/injector-bridge'
 import { buildThemePackage } from './client-theme/theme-builder'
 import { LcuConnectionManager } from './lcu/connection-manager'
 import {
@@ -164,6 +169,13 @@ function registerClientThemeBridge(): void {
     const pkg = buildThemePackage(settings)
     await applyTheme(pkg)
   })
+  // enable/disable are the HKLM registry toggle (needs an admin prompt —
+  // see injector-bridge.ts); apply just writes the plugin file, which
+  // doesn't. Kept as separate actions so the UI can be honest about which
+  // one triggers UAC.
+  ipcMain.handle('client-theme:enable', () => enableClientTheme())
+  ipcMain.handle('client-theme:disable', () => disableClientTheme())
+  ipcMain.handle('client-theme:status', () => isClientThemeEnabled())
 }
 
 function registerRuneBookBridge(): void {
