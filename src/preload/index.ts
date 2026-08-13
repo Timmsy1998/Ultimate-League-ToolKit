@@ -3,10 +3,13 @@ import type {
   ActivityEntry,
   ChampionSummary,
   DisenchantRequest,
+  FriendGroup,
+  FriendSummary,
   GameflowPhase,
   GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
+  InviteFriendsRequest,
   LcuSnapshot,
   LootSummary,
   PerkCatalog,
@@ -53,7 +56,11 @@ const lcu = {
   leaveLobby: (): Promise<void> => ipcRenderer.invoke('lcu:leave-lobby')
   getLoot: (): Promise<LootSummary> => ipcRenderer.invoke('lcu:get-loot'),
   disenchantLoot: (request: DisenchantRequest): Promise<LootSummary> =>
-    ipcRenderer.invoke('lcu:disenchant-loot', request)
+    ipcRenderer.invoke('lcu:disenchant-loot', request),
+  getFriends: (): Promise<FriendSummary[]> => ipcRenderer.invoke('lcu:get-friends'),
+  getFriendGroups: (): Promise<FriendGroup[]> => ipcRenderer.invoke('lcu:get-friend-groups'),
+  inviteFriends: (request: InviteFriendsRequest): Promise<void> =>
+    ipcRenderer.invoke('lcu:invite-friends', request)
 }
 
 const settings = {
