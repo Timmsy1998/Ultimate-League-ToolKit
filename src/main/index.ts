@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, session, shell } from 'electron'
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { applyTheme } from './client-theme/injector-bridge'
+import { buildThemePackage } from './client-theme/theme-builder'
 import { LcuConnectionManager } from './lcu/connection-manager'
 import {
   isAllowedAssetPath,
@@ -156,6 +158,14 @@ function registerLcuBridge(): void {
   lcuManager.start()
 }
 
+function registerClientThemeBridge(): void {
+  ipcMain.handle('client-theme:apply', async () => {
+    const settings = await readSettings()
+    const pkg = buildThemePackage(settings)
+    await applyTheme(pkg)
+  })
+}
+
 function registerRuneBookBridge(): void {
   ipcMain.handle('rune-book:get', () => runeBookStore.readBook())
   ipcMain.handle('rune-book:save-page', (_event, page: unknown) => runeBookStore.savePage(page))
@@ -225,6 +235,7 @@ app.whenReady().then(async () => {
 
   createWindow(await resolveInitialTheme())
   registerLcuBridge()
+  registerClientThemeBridge()
   registerRuneBookBridge()
   registerRankHistoryBridge()
   registerUpdaterBridge()

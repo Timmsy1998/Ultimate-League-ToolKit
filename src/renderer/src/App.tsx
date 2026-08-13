@@ -6,6 +6,7 @@ import { UpdateBanner } from '@renderer/components/UpdateBanner/UpdateBanner'
 import { LcuProvider } from '@renderer/lcu/LcuContext'
 import { NavigationProvider } from '@renderer/navigation/NavigationContext'
 import { About } from '@renderer/pages/About'
+import { ClientTheme } from '@renderer/pages/ClientTheme'
 import { Dashboard } from '@renderer/pages/Dashboard'
 import { Notifications } from '@renderer/pages/Notifications'
 import { Rank } from '@renderer/pages/Rank'
@@ -23,6 +24,7 @@ const PAGES: Record<PageId, React.ComponentType> = {
   tools: Tools,
   rank: Rank,
   'rune-book': RuneBook,
+  'client-theme': ClientTheme,
   settings: Settings,
   about: About
 }

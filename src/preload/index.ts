@@ -86,6 +86,12 @@ const theme = {
   }
 }
 
+// Distinct from `theme` above — this is the League Client reskin feature
+// (CLAUDE.md §5a), not ULTK's own dark/light appearance.
+const clientTheme = {
+  apply: (): Promise<void> => ipcRenderer.invoke('client-theme:apply')
+}
+
 const updater = {
   getState: (): Promise<UpdaterState> => ipcRenderer.invoke('update:get-state'),
   onState: (cb: (state: UpdaterState) => void) => subscribe('update:state', cb),
@@ -101,7 +107,7 @@ const appInfo = {
   getVersion: (): Promise<string> => ipcRenderer.invoke('app:get-version')
 }
 
-const api = { lcu, settings, runeBook, rankHistory, theme, updater, app: appInfo }
+const api = { lcu, settings, runeBook, rankHistory, theme, clientTheme, updater, app: appInfo }
 
 if (process.contextIsolated) {
   try {
