@@ -7,11 +7,14 @@ name: Release
 #
 # Installer signing goes through SignPath (see CLAUDE.md §7). This workflow
 # needs, in this repo's GitHub Settings → Secrets and variables → Actions:
-#   Secret:    SIGNPATH_API_TOKEN
-#   Variables: SIGNPATH_ORGANIZATION_ID, SIGNPATH_PROJECT_SLUG,
-#              SIGNPATH_SIGNING_POLICY_SLUG
-#              (SIGNPATH_ARTIFACT_CONFIGURATION_SLUG only if it isn't
-#              named "default" in the SignPath project)
+#   Secrets:  SIGNPATH_API_TOKEN, SIGNPATH_ORGANIZATION_ID,
+#             SIGNPATH_PROJECT_SLUG, SIGNPATH_SIGNING_POLICY_SLUG
+#             (none of these are sensitive except the token, but keeping
+#             them all as secrets avoids a second place to configure them —
+#             see the "artifact-configuration-slug" line below for the one
+#             value that's a plain variable, since it's optional)
+#   Variable: SIGNPATH_ARTIFACT_CONFIGURATION_SLUG, only if it isn't named
+#             "default" in the SignPath project
 # all of which come from a SignPath organization/project set up for this
 # repo — see https://signpath.io/solutions/open-source-community.
 #
@@ -107,9 +110,9 @@ jobs:
         uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}
           artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'default' }}
           github-artifact-id: ${{ steps.upload-unsigned-installer.outputs.artifact-id }}
           wait-for-completion: true
