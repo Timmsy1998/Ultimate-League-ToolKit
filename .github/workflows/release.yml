@@ -79,9 +79,9 @@ jobs:
       # latest.yml (which the in-app updater checks) from package.json, so
       # it's set here for the build only — never committed.
       - name: Set build version
-        if: steps.semrel.outputs.new-release-published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true'
         shell: bash
-        run: npm version ${{ steps.semrel.outputs.new-release-version }} --no-git-tag-version --allow-same-version
+        run: npm version ${{ steps.semrel.outputs.new_release_version }} --no-git-tag-version --allow-same-version
 
       # Unsigned on purpose — electron-builder computes latest.yml's sha512
       # from whatever's on disk when it runs, so if that ever runs against a
@@ -90,11 +90,11 @@ jobs:
       # then does fix-latest-yml.mjs (re)compute the manifest hash — against
       # the actual signed bytes that get published.
       - name: Build installer (unsigned)
-        if: steps.semrel.outputs.new-release-published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true'
         run: npm run build:win
 
       - name: Upload unsigned installer for signing
-        if: steps.semrel.outputs.new-release-published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true'
         id: upload-unsigned-installer
         uses: actions/upload-artifact@v4
         with:
@@ -103,7 +103,7 @@ jobs:
           retention-days: 1
 
       - name: Submit to SignPath
-        if: steps.semrel.outputs.new-release-published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true'
         uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -116,15 +116,15 @@ jobs:
           output-artifact-directory: signed
 
       - name: Restore signed installer and fix update manifest
-        if: steps.semrel.outputs.new-release-published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true'
         shell: bash
         run: |
           cp signed/*-setup.exe release/
           node scripts/fix-latest-yml.mjs
 
       - name: Publish release assets
-        if: steps.semrel.outputs.new-release-published == 'true'
+        if: steps.semrel.outputs.new_release_published == 'true'
         shell: bash
-        run: gh release upload "v${{ steps.semrel.outputs.new-release-version }}" release/*-setup.exe release/latest.yml --clobber
+        run: gh release upload "v${{ steps.semrel.outputs.new_release_version }}" release/*-setup.exe release/latest.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
