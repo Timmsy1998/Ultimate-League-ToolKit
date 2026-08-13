@@ -1,4 +1,4 @@
-import type { ImportRunePageRequest, SummonerInfo } from '../../shared/lcu-types'
+import type { DisenchantRequest, ImportRunePageRequest, SummonerInfo } from '../../shared/lcu-types'
 
 export function isSummonerInfo(value: unknown): value is SummonerInfo {
   if (!value || typeof value !== 'object') return false
@@ -38,5 +38,22 @@ export function isImportRunePageRequest(value: unknown): value is ImportRunePage
     v.selectedPerkIds.length === 9 &&
     v.selectedPerkIds.every((id) => typeof id === 'number') &&
     (v.overwritePageId === undefined || typeof v.overwritePageId === 'number')
+  )
+}
+
+// Bounds the batch size so this channel can't be used to send an
+// arbitrarily large crafting request in one call.
+const MAX_LOOT_IDS = 50
+
+export function isDisenchantRequest(value: unknown): value is DisenchantRequest {
+  if (!value || typeof value !== 'object') return false
+  const v = value as Record<string, unknown>
+  return (
+    typeof v.recipeName === 'string' &&
+    v.recipeName.length > 0 &&
+    Array.isArray(v.lootIds) &&
+    v.lootIds.length > 0 &&
+    v.lootIds.length <= MAX_LOOT_IDS &&
+    v.lootIds.every((id) => typeof id === 'string')
   )
 }

@@ -7,6 +7,7 @@ import { fetchAssetDataUri } from './assets'
 import { fetchChampions } from './champions'
 import { createLimiter } from './concurrency-limit'
 import { fetchGameSession } from './game-session'
+import { craftDisenchant, fetchLoot } from './loot'
 import { fetchRankedStats } from './ranked'
 import { fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
 import { fetchMatchHistory } from './match-history'
@@ -21,6 +22,7 @@ import type {
   ImportRunePageResult,
   LcuEvent,
   LcuSnapshot,
+  LootSummary,
   PerkCatalog,
   RankedEntry,
   RankedStats,
@@ -163,6 +165,20 @@ export class LcuConnectionManager extends EventEmitter {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
     await this.client.post('/lol-matchmaking/v1/ready-check/accept', undefined)
+  }
+
+  getLoot(): Promise<LootSummary> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchLoot(this.client)
+  }
+
+  disenchantLoot(recipeName: string, lootIds: string[]): Promise<LootSummary> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return craftDisenchant(this.client, recipeName, lootIds)
   }
 
   private schedulePoll(delay: number): void {
