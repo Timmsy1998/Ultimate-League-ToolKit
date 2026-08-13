@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: Settings = {
   launchOnStartup: false,
   notificationsEnabled: true,
   autoAcceptReadyCheck: false,
+  dodgeToolEnabled: true,
   lootHelperEnabled: true,
   inviteFriendsEnabled: true
   dodgeToolEnabled: true
