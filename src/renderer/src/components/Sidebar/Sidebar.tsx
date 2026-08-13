@@ -1,5 +1,19 @@
 import { Bell, Gauge, Info, NotebookPen, Palette, PlugZap, Settings, Trophy, Wrench } from 'lucide-react'
+import { useLcu } from '@renderer/lcu/LcuContext'
+import type { ConnectionStatus } from '../../../../shared/lcu-types'
 import styles from './Sidebar.module.css'
+
+const STATUS_LABEL: Record<ConnectionStatus, string> = {
+  online: 'League Client: connected',
+  connecting: 'League Client: connecting…',
+  offline: 'League Client: not detected'
+}
+
+const STATUS_CLASS: Record<ConnectionStatus, string> = {
+  online: styles.online,
+  connecting: styles.connecting,
+  offline: styles.offline
+}
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: Gauge },
@@ -20,6 +34,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ active, onNavigate }: SidebarProps): React.JSX.Element {
+  const { status } = useLcu()
+
   return (
     <nav className={styles.sidebar} aria-label="Primary">
       <ul className={styles.navList}>
@@ -45,11 +61,11 @@ export function Sidebar({ active, onNavigate }: SidebarProps): React.JSX.Element
       <div className={styles.status}>
         <button
           type="button"
-          className={styles.statusButton}
-          title="League Client: not detected"
+          className={`${styles.statusButton} ${STATUS_CLASS[status]}`}
+          title={STATUS_LABEL[status]}
         >
           <PlugZap size={18} strokeWidth={1.75} aria-hidden="true" />
-          <span className={styles.srOnly}>League Client status: not detected</span>
+          <span className={styles.srOnly}>{STATUS_LABEL[status]}</span>
         </button>
       </div>
     </nav>
