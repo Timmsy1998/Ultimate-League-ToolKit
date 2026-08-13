@@ -33,6 +33,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
