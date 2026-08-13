@@ -1,11 +1,13 @@
 import type {
   ActivityEntry,
   ChampionSummary,
+  DisenchantRequest,
   GameflowPhase,
   GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
   LcuSnapshot,
+  LootSummary,
   PerkCatalog,
   RankedStats,
   RunePageSummary,
@@ -32,6 +34,8 @@ export interface LcuBridge {
   getChampions: () => Promise<ChampionSummary[]>
   getAsset: (path: string) => Promise<string>
   importRunePage: (request: ImportRunePageRequest) => Promise<ImportRunePageResult>
+  getLoot: () => Promise<LootSummary>
+  disenchantLoot: (request: DisenchantRequest) => Promise<LootSummary>
 }
 
 export interface SettingsBridge {

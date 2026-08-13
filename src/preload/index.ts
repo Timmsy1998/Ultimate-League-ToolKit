@@ -2,11 +2,13 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type {
   ActivityEntry,
   ChampionSummary,
+  DisenchantRequest,
   GameflowPhase,
   GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
   LcuSnapshot,
+  LootSummary,
   PerkCatalog,
   RankedStats,
   RunePageSummary,
@@ -47,7 +49,10 @@ const lcu = {
   getChampions: (): Promise<ChampionSummary[]> => ipcRenderer.invoke('lcu:get-champions'),
   getAsset: (path: string): Promise<string> => ipcRenderer.invoke('lcu:get-asset', path),
   importRunePage: (request: ImportRunePageRequest): Promise<ImportRunePageResult> =>
-    ipcRenderer.invoke('lcu:import-rune-page', request)
+    ipcRenderer.invoke('lcu:import-rune-page', request),
+  getLoot: (): Promise<LootSummary> => ipcRenderer.invoke('lcu:get-loot'),
+  disenchantLoot: (request: DisenchantRequest): Promise<LootSummary> =>
+    ipcRenderer.invoke('lcu:disenchant-loot', request)
 }
 
 const settings = {

@@ -5,11 +5,13 @@ export interface Settings {
   launchOnStartup: boolean
   notificationsEnabled: boolean
   autoAcceptReadyCheck: boolean
+  lootHelperEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'dark',
   launchOnStartup: false,
   notificationsEnabled: true,
-  autoAcceptReadyCheck: false
+  autoAcceptReadyCheck: false,
+  lootHelperEnabled: true
 }

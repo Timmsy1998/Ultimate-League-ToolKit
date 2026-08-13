@@ -150,3 +150,27 @@ export interface MatchSummary {
   durationSeconds: number
   playedAt: number
 }
+
+export interface LootItem {
+  lootId: string
+  type: string
+  localizedName: string
+  count: number
+  disenchantValue: number | null
+  disenchantLootName: string | null
+  // Crafting (disenchant, chest+key opening) always needs a recipe name —
+  // it comes from the client itself rather than being guessed here, since
+  // LCU recipe naming is undocumented and has changed between versions.
+  disenchantRecipeName: string | null
+  iconPath: string | null
+}
+
+export interface LootSummary {
+  items: LootItem[]
+  currencies: { name: string; count: number }[]
+}
+
+export interface DisenchantRequest {
+  recipeName: string
+  lootIds: string[]
+}

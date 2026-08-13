@@ -1,5 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import { Card } from '@renderer/components/Card/Card'
+import { useSettings } from '@renderer/settings/SettingsContext'
+import { LootHelperCard } from './tools/LootHelperCard'
 import { MatchHistoryCard } from './tools/MatchHistoryCard'
 import { RunePagesCard } from './tools/RunePagesCard'
 import { SessionOverviewCard } from './tools/SessionOverviewCard'
@@ -15,6 +17,8 @@ const COMING_SOON_TOOLS = [
 ] as const
 
 export function Tools(): React.JSX.Element {
+  const { settings } = useSettings()
+
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
@@ -30,6 +34,7 @@ export function Tools(): React.JSX.Element {
         <SessionOverviewCard />
         <RunePagesCard />
         <MatchHistoryCard />
+        {settings.lootHelperEnabled ? <LootHelperCard /> : null}
         {COMING_SOON_TOOLS.map(({ icon, title, description }) => (
           <Card key={title} icon={icon} title={title} tag="Coming soon">
             <p className={toolStyles.description}>{description}</p>

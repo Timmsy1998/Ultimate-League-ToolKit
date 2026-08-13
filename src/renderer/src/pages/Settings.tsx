@@ -124,6 +124,25 @@ export function Settings(): React.JSX.Element {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Tools</h2>
+        <div className={settingsStyles.panel}>
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Loot Helper</p>
+              <p className={settingsStyles.rowDescription}>
+                Show the Loot Helper card on the Tools page for disenchanting shards and opening chests.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.lootHelperEnabled}
+              onChange={(checked) => updateSettings({ lootHelperEnabled: checked })}
+              label="Loot Helper"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.sectionTitle}>About</h2>
         <div className={settingsStyles.panel}>
           <div className={settingsStyles.row}>
