@@ -139,6 +139,20 @@ export function Settings(): React.JSX.Element {
               label="Loot Helper"
             />
           </div>
+          <div className={settingsStyles.divider} />
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Invite friends</p>
+              <p className={settingsStyles.rowDescription}>
+                Show the Invite Friends card on the Tools page for inviting friends and friend groups to your lobby.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.inviteFriendsEnabled}
+              onChange={(checked) => updateSettings({ inviteFriendsEnabled: checked })}
+              label="Invite friends"
+            />
+          </div>
         </div>
       </section>
 

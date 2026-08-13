@@ -6,6 +6,7 @@ import { LcuHttpClient } from './http-client'
 import { fetchAssetDataUri } from './assets'
 import { fetchChampions } from './champions'
 import { createLimiter } from './concurrency-limit'
+import { fetchFriendGroups, fetchFriends, inviteFriends } from './friends'
 import { fetchGameSession } from './game-session'
 import { craftDisenchant, fetchLoot } from './loot'
 import { fetchRankedStats } from './ranked'
@@ -18,6 +19,8 @@ import type {
   ConnectionStatus,
   GameflowPhase,
   GameSessionInfo,
+  FriendGroup,
+  FriendSummary,
   ImportRunePageRequest,
   ImportRunePageResult,
   LcuEvent,
@@ -179,6 +182,27 @@ export class LcuConnectionManager extends EventEmitter {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
     return craftDisenchant(this.client, recipeName, lootIds)
+  }
+
+  getFriends(): Promise<FriendSummary[]> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchFriends(this.client)
+  }
+
+  getFriendGroups(): Promise<FriendGroup[]> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchFriendGroups(this.client)
+  }
+
+  async inviteFriends(summonerIds: number[]): Promise<void> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    await inviteFriends(this.client, summonerIds)
   }
 
   private schedulePoll(delay: number): void {

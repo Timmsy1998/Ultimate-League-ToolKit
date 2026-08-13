@@ -1,6 +1,7 @@
 import { Sparkles } from 'lucide-react'
 import { Card } from '@renderer/components/Card/Card'
 import { useSettings } from '@renderer/settings/SettingsContext'
+import { InviteFriendsCard } from './tools/InviteFriendsCard'
 import { LootHelperCard } from './tools/LootHelperCard'
 import { MatchHistoryCard } from './tools/MatchHistoryCard'
 import { RunePagesCard } from './tools/RunePagesCard'
@@ -35,6 +36,7 @@ export function Tools(): React.JSX.Element {
         <RunePagesCard />
         <MatchHistoryCard />
         {settings.lootHelperEnabled ? <LootHelperCard /> : null}
+        {settings.inviteFriendsEnabled ? <InviteFriendsCard /> : null}
         {COMING_SOON_TOOLS.map(({ icon, title, description }) => (
           <Card key={title} icon={icon} title={title} tag="Coming soon">
             <p className={toolStyles.description}>{description}</p>

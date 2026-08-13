@@ -2,7 +2,12 @@ import { app, BrowserWindow, ipcMain, nativeTheme, session, shell } from 'electr
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { LcuConnectionManager } from './lcu/connection-manager'
-import { isAllowedAssetPath, isDisenchantRequest, isImportRunePageRequest } from './lcu/validate'
+import {
+  isAllowedAssetPath,
+  isDisenchantRequest,
+  isImportRunePageRequest,
+  isInviteFriendsRequest
+} from './lcu/validate'
 import { notify } from './notifications/notifier'
 import * as rankHistoryStore from './rank-history/store'
 import * as runeBookStore from './rune-book/store'
@@ -139,6 +144,12 @@ function registerLcuBridge(): void {
   ipcMain.handle('lcu:disenchant-loot', (_event, request: unknown) => {
     if (!isDisenchantRequest(request)) return Promise.reject(new Error('Invalid disenchant request'))
     return lcuManager.disenchantLoot(request.recipeName, request.lootIds)
+  })
+  ipcMain.handle('lcu:get-friends', () => lcuManager.getFriends())
+  ipcMain.handle('lcu:get-friend-groups', () => lcuManager.getFriendGroups())
+  ipcMain.handle('lcu:invite-friends', (_event, request: unknown) => {
+    if (!isInviteFriendsRequest(request)) return Promise.reject(new Error('Invalid invite request'))
+    return lcuManager.inviteFriends(request.summonerIds)
   })
 
   lcuManager.start()

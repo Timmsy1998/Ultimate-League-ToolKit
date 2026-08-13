@@ -6,6 +6,7 @@ export interface Settings {
   notificationsEnabled: boolean
   autoAcceptReadyCheck: boolean
   lootHelperEnabled: boolean
+  inviteFriendsEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -13,5 +14,6 @@ export const DEFAULT_SETTINGS: Settings = {
   launchOnStartup: false,
   notificationsEnabled: true,
   autoAcceptReadyCheck: false,
-  lootHelperEnabled: true
+  lootHelperEnabled: true,
+  inviteFriendsEnabled: true
 }

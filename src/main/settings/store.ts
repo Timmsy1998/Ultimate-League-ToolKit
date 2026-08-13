@@ -20,6 +20,7 @@ function isPartialSettings(value: unknown): value is Partial<Settings> {
   if ('notificationsEnabled' in v && typeof v.notificationsEnabled !== 'boolean') return false
   if ('autoAcceptReadyCheck' in v && typeof v.autoAcceptReadyCheck !== 'boolean') return false
   if ('lootHelperEnabled' in v && typeof v.lootHelperEnabled !== 'boolean') return false
+  if ('inviteFriendsEnabled' in v && typeof v.inviteFriendsEnabled !== 'boolean') return false
   return true
 }
 
