@@ -76,6 +76,18 @@
   color: var(--text-secondary);
 }
 
+.statusButton.online {
+  color: var(--accent);
+}
+
+.statusButton.connecting {
+  color: var(--status-warn);
+}
+
+.statusButton.offline {
+  color: var(--status-offline);
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
