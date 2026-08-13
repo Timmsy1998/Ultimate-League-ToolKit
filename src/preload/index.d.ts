@@ -58,6 +58,10 @@ export interface ThemeBridge {
   reportEffective: (value: 'dark' | 'light') => void
 }
 
+export interface ClientThemeBridge {
+  apply: () => Promise<void>
+}
+
 export interface UpdaterBridge {
   getState: () => Promise<UpdaterState>
   onState: (cb: (state: UpdaterState) => void) => () => void
@@ -77,6 +81,7 @@ declare global {
       runeBook: RuneBookBridge
       rankHistory: RankHistoryBridge
       theme: ThemeBridge
+      clientTheme: ClientThemeBridge
       updater: UpdaterBridge
       app: AppInfoBridge
     }

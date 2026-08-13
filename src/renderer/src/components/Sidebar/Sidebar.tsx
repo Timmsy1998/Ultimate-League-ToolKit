@@ -1,4 +1,4 @@
-import { Bell, Gauge, Info, NotebookPen, PlugZap, Settings, Trophy, Wrench } from 'lucide-react'
+import { Bell, Gauge, Info, NotebookPen, Palette, PlugZap, Settings, Trophy, Wrench } from 'lucide-react'
 import styles from './Sidebar.module.css'
 
 const NAV_ITEMS = [
@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { id: 'tools', label: 'Tools', icon: Wrench },
   { id: 'rank', label: 'Rank', icon: Trophy },
   { id: 'rune-book', label: 'Rune book', icon: NotebookPen },
+  { id: 'client-theme', label: 'Client Theme', icon: Palette },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'about', label: 'About', icon: Info }
 ] as const
