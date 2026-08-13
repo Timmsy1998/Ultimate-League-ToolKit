@@ -128,15 +128,6 @@ export function Settings(): React.JSX.Element {
         <div className={settingsStyles.panel}>
           <div className={settingsStyles.row}>
             <div>
-              <p className={settingsStyles.rowTitle}>Dodge button</p>
-              <p className={settingsStyles.rowDescription}>
-                Show a Leave Lobby / Dodge card on the Tools page for backing out before a game starts.
-              </p>
-            </div>
-            <Toggle
-              checked={settings.dodgeToolEnabled}
-              onChange={(checked) => updateSettings({ dodgeToolEnabled: checked })}
-              label="Dodge button"
               <p className={settingsStyles.rowTitle}>Loot Helper</p>
               <p className={settingsStyles.rowDescription}>
                 Show the Loot Helper card on the Tools page for disenchanting shards and opening chests.
@@ -146,6 +137,20 @@ export function Settings(): React.JSX.Element {
               checked={settings.lootHelperEnabled}
               onChange={(checked) => updateSettings({ lootHelperEnabled: checked })}
               label="Loot Helper"
+            />
+          </div>
+          <div className={settingsStyles.divider} />
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Dodge button</p>
+              <p className={settingsStyles.rowDescription}>
+                Show a Leave Lobby / Dodge card on the Tools page for backing out before a game starts.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.dodgeToolEnabled}
+              onChange={(checked) => updateSettings({ dodgeToolEnabled: checked })}
+              label="Dodge button"
             />
           </div>
         </div>

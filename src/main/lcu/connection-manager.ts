@@ -173,6 +173,8 @@ export class LcuConnectionManager extends EventEmitter {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
     await leaveLobby(this.client)
+  }
+
   getLoot(): Promise<LootSummary> {
     if (!this.client) {
       return Promise.reject(new Error('Not connected to the League Client'))

@@ -14,6 +14,6 @@ export const DEFAULT_SETTINGS: Settings = {
   launchOnStartup: false,
   notificationsEnabled: true,
   autoAcceptReadyCheck: false,
-  dodgeToolEnabled: true
+  dodgeToolEnabled: true,
   lootHelperEnabled: true
 }
