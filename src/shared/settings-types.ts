@@ -32,8 +32,6 @@ export const DEFAULT_SETTINGS: Settings = {
   clientThemeAccentColor: null,
   clientThemeFont: null,
   clientThemeBannerImage: null,
-  clientThemeIconImage: null
+  clientThemeIconImage: null,
   inviteFriendsEnabled: true
-  dodgeToolEnabled: true
-  lootHelperEnabled: true
 }
