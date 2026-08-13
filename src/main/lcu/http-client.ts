@@ -6,7 +6,7 @@ export interface LcuBufferResponse {
   contentType: string
 }
 
-type Method = 'GET' | 'POST' | 'PUT'
+type Method = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
 export class LcuHttpClient {
   private readonly agent: https.Agent
@@ -33,6 +33,10 @@ export class LcuHttpClient {
 
   put<T>(path: string, body: unknown): Promise<T> {
     return this.requestJson<T>('PUT', path, body)
+  }
+
+  delete<T>(path: string): Promise<T> {
+    return this.requestJson<T>('DELETE', path)
   }
 
   // For plugin-resource assets (champion/perk icons) — the response isn't

@@ -7,6 +7,7 @@ import { fetchAssetDataUri } from './assets'
 import { fetchChampions } from './champions'
 import { createLimiter } from './concurrency-limit'
 import { fetchGameSession } from './game-session'
+import { leaveLobby } from './lobby'
 import { craftDisenchant, fetchLoot } from './loot'
 import { fetchRankedStats } from './ranked'
 import { fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
@@ -167,6 +168,11 @@ export class LcuConnectionManager extends EventEmitter {
     await this.client.post('/lol-matchmaking/v1/ready-check/accept', undefined)
   }
 
+  async leaveLobby(): Promise<void> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    await leaveLobby(this.client)
   getLoot(): Promise<LootSummary> {
     if (!this.client) {
       return Promise.reject(new Error('Not connected to the League Client'))

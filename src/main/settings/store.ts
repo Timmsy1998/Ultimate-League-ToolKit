@@ -19,6 +19,7 @@ function isPartialSettings(value: unknown): value is Partial<Settings> {
   if ('launchOnStartup' in v && typeof v.launchOnStartup !== 'boolean') return false
   if ('notificationsEnabled' in v && typeof v.notificationsEnabled !== 'boolean') return false
   if ('autoAcceptReadyCheck' in v && typeof v.autoAcceptReadyCheck !== 'boolean') return false
+  if ('dodgeToolEnabled' in v && typeof v.dodgeToolEnabled !== 'boolean') return false
   if ('lootHelperEnabled' in v && typeof v.lootHelperEnabled !== 'boolean') return false
   return true
 }

@@ -5,6 +5,7 @@ export interface Settings {
   launchOnStartup: boolean
   notificationsEnabled: boolean
   autoAcceptReadyCheck: boolean
+  dodgeToolEnabled: boolean
   lootHelperEnabled: boolean
 }
 
@@ -13,5 +14,6 @@ export const DEFAULT_SETTINGS: Settings = {
   launchOnStartup: false,
   notificationsEnabled: true,
   autoAcceptReadyCheck: false,
+  dodgeToolEnabled: true
   lootHelperEnabled: true
 }
