@@ -1,4 +1,4 @@
-import type { DisenchantRequest, ImportRunePageRequest, SummonerInfo } from '../../shared/lcu-types'
+import type { DisenchantRequest, ImportRunePageRequest, InviteFriendsRequest, SummonerInfo } from '../../shared/lcu-types'
 
 export function isSummonerInfo(value: unknown): value is SummonerInfo {
   if (!value || typeof value !== 'object') return false
@@ -55,5 +55,20 @@ export function isDisenchantRequest(value: unknown): value is DisenchantRequest 
     v.lootIds.length > 0 &&
     v.lootIds.length <= MAX_LOOT_IDS &&
     v.lootIds.every((id) => typeof id === 'string')
+  )
+}
+
+// Bounds the batch size so this channel can't be used to spam-invite an
+// arbitrarily large number of summoners in one call.
+const MAX_INVITE_SUMMONER_IDS = 50
+
+export function isInviteFriendsRequest(value: unknown): value is InviteFriendsRequest {
+  if (!value || typeof value !== 'object') return false
+  const v = value as Record<string, unknown>
+  return (
+    Array.isArray(v.summonerIds) &&
+    v.summonerIds.length > 0 &&
+    v.summonerIds.length <= MAX_INVITE_SUMMONER_IDS &&
+    v.summonerIds.every((id) => typeof id === 'number')
   )
 }

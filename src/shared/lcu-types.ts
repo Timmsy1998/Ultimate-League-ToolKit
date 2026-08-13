@@ -174,3 +174,19 @@ export interface DisenchantRequest {
   recipeName: string
   lootIds: string[]
 }
+
+export interface FriendGroup {
+  id: string
+  name: string
+}
+
+export interface FriendSummary {
+  summonerId: number
+  name: string
+  groupId: string
+  availability: string // 'chat' | 'away' | 'dnd' | 'mobile' | 'offline' | 'onlineelsewhere' | ...
+}
+
+export interface InviteFriendsRequest {
+  summonerIds: number[]
+}

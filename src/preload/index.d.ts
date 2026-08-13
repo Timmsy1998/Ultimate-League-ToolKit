@@ -2,10 +2,13 @@ import type {
   ActivityEntry,
   ChampionSummary,
   DisenchantRequest,
+  FriendGroup,
+  FriendSummary,
   GameflowPhase,
   GameSessionInfo,
   ImportRunePageRequest,
   ImportRunePageResult,
+  InviteFriendsRequest,
   LcuSnapshot,
   LootSummary,
   PerkCatalog,
@@ -37,6 +40,9 @@ export interface LcuBridge {
   leaveLobby: () => Promise<void>
   getLoot: () => Promise<LootSummary>
   disenchantLoot: (request: DisenchantRequest) => Promise<LootSummary>
+  getFriends: () => Promise<FriendSummary[]>
+  getFriendGroups: () => Promise<FriendGroup[]>
+  inviteFriends: (request: InviteFriendsRequest) => Promise<void>
 }
 
 export interface SettingsBridge {

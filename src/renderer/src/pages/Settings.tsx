@@ -151,6 +151,15 @@ export function Settings(): React.JSX.Element {
               checked={settings.dodgeToolEnabled}
               onChange={(checked) => updateSettings({ dodgeToolEnabled: checked })}
               label="Dodge button"
+              <p className={settingsStyles.rowTitle}>Invite friends</p>
+              <p className={settingsStyles.rowDescription}>
+                Show the Invite Friends card on the Tools page for inviting friends and friend groups to your lobby.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.inviteFriendsEnabled}
+              onChange={(checked) => updateSettings({ inviteFriendsEnabled: checked })}
+              label="Invite friends"
             />
           </div>
         </div>

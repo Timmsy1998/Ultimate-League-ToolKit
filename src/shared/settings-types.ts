@@ -17,6 +17,7 @@ export interface Settings {
   clientThemeFont: string | null
   clientThemeBannerImage: string | null // data URI
   clientThemeIconImage: string | null // data URI
+  inviteFriendsEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -32,4 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   clientThemeFont: null,
   clientThemeBannerImage: null,
   clientThemeIconImage: null
+  inviteFriendsEnabled: true
+  dodgeToolEnabled: true
+  lootHelperEnabled: true
 }
