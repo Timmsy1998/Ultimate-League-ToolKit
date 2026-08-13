@@ -57,11 +57,15 @@ async function main() {
     await execFileAsync('pnpm', ['install', '--frozen-lockfile'], { cwd: pluginsDir, shell: true })
     await execFileAsync('pnpm', ['build'], { cwd: pluginsDir, shell: true })
 
-    await execFileAsync(
-      'msbuild',
-      [solutionPath, '/t:core:Restore,core:Build', '/p:Configuration=Release', '/p:Platform=x64'],
-      { cwd: submoduleDir }
-    )
+    // No NuGet restore needed/available here — MSB4057 confirmed "Restore"
+    // isn't a valid target on this plain native vcxproj (that target only
+    // applies to PackageReference-style projects, and PenguLoader's C#
+    // loader is the only one of those in this solution — which we don't
+    // build). Plain /t:core is what actually got to real compilation in
+    // the first CI run of this workflow, short of the missing header.
+    await execFileAsync('msbuild', [solutionPath, '/t:core', '/p:Configuration=Release', '/p:Platform=x64'], {
+      cwd: submoduleDir
+    })
     await copyFile(builtDllPath, path.join(outDir, 'core.dll'))
     console.log(`Built and copied core.dll to ${outDir}`)
   } catch (err) {
