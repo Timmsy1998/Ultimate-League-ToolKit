@@ -53,6 +53,7 @@ const lcu = {
   getAsset: (path: string): Promise<string> => ipcRenderer.invoke('lcu:get-asset', path),
   importRunePage: (request: ImportRunePageRequest): Promise<ImportRunePageResult> =>
     ipcRenderer.invoke('lcu:import-rune-page', request),
+  leaveLobby: (): Promise<void> => ipcRenderer.invoke('lcu:leave-lobby')
   getLoot: (): Promise<LootSummary> => ipcRenderer.invoke('lcu:get-loot'),
   disenchantLoot: (request: DisenchantRequest): Promise<LootSummary> =>
     ipcRenderer.invoke('lcu:disenchant-loot', request),

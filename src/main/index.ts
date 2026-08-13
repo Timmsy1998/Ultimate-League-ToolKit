@@ -140,6 +140,7 @@ function registerLcuBridge(): void {
     if (!isImportRunePageRequest(request)) return Promise.reject(new Error('Invalid rune page payload'))
     return lcuManager.importRunePage(request)
   })
+  ipcMain.handle('lcu:leave-lobby', () => lcuManager.leaveLobby())
   ipcMain.handle('lcu:get-loot', () => lcuManager.getLoot())
   ipcMain.handle('lcu:disenchant-loot', (_event, request: unknown) => {
     if (!isDisenchantRequest(request)) return Promise.reject(new Error('Invalid disenchant request'))

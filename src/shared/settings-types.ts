@@ -5,6 +5,7 @@ export interface Settings {
   launchOnStartup: boolean
   notificationsEnabled: boolean
   autoAcceptReadyCheck: boolean
+  dodgeToolEnabled: boolean
   lootHelperEnabled: boolean
   inviteFriendsEnabled: boolean
 }
@@ -16,4 +17,6 @@ export const DEFAULT_SETTINGS: Settings = {
   autoAcceptReadyCheck: false,
   lootHelperEnabled: true,
   inviteFriendsEnabled: true
+  dodgeToolEnabled: true
+  lootHelperEnabled: true
 }

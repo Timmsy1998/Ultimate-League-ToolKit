@@ -2,6 +2,7 @@ import { Sparkles } from 'lucide-react'
 import { Card } from '@renderer/components/Card/Card'
 import { useSettings } from '@renderer/settings/SettingsContext'
 import { InviteFriendsCard } from './tools/InviteFriendsCard'
+import { DodgeCard } from './tools/DodgeCard'
 import { LootHelperCard } from './tools/LootHelperCard'
 import { MatchHistoryCard } from './tools/MatchHistoryCard'
 import { RunePagesCard } from './tools/RunePagesCard'
@@ -35,6 +36,7 @@ export function Tools(): React.JSX.Element {
         <SessionOverviewCard />
         <RunePagesCard />
         <MatchHistoryCard />
+        {settings.dodgeToolEnabled ? <DodgeCard /> : null}
         {settings.lootHelperEnabled ? <LootHelperCard /> : null}
         {settings.inviteFriendsEnabled ? <InviteFriendsCard /> : null}
         {COMING_SOON_TOOLS.map(({ icon, title, description }) => (

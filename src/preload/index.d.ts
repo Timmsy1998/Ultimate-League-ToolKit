@@ -37,6 +37,7 @@ export interface LcuBridge {
   getChampions: () => Promise<ChampionSummary[]>
   getAsset: (path: string) => Promise<string>
   importRunePage: (request: ImportRunePageRequest) => Promise<ImportRunePageResult>
+  leaveLobby: () => Promise<void>
   getLoot: () => Promise<LootSummary>
   disenchantLoot: (request: DisenchantRequest) => Promise<LootSummary>
   getFriends: () => Promise<FriendSummary[]>
