@@ -1,0 +1,31 @@
+appId: com.ultk.app
+productName: ULTK
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**/*
+  - package.json
+# core.dll (vendored from PenguLoader, see THIRD_PARTY_NOTICES.md) is built
+# separately by CI (or locally via scripts/build-pengu-core.mjs) into
+# resources/pengu-core/ before electron-builder runs — not committed to the
+# repo, same as everything else electron-builder bundles from a build step.
+extraResources:
+  - from: resources/pengu-core
+    to: pengu-core
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  artifactName: ${productName}-${version}-setup.${ext}
+publish:
+  provider: github
+  owner: Timmsy1998
+  repo: Ultimate-League-ToolKit

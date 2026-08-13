@@ -1,0 +1,31 @@
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.fileButton {
+  cursor: pointer;
+}
+
+.fileInput {
+  display: none;
+}
+
+.colorInput {
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: none;
+}
+
+.fontSelect {
+  padding: var(--space-2) var(--space-3);
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}

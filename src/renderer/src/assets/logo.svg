@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <polygon
+    points="128,16 225,72 225,184 128,240 31,184 31,72"
+    fill="#12151b"
+    stroke="#35d0a4"
+    stroke-width="8"
+    stroke-linejoin="round"
+  />
+  <polygon
+    points="80,84 80,156 96,172 160,172 176,156 176,84 150,84 150,136 140,146 116,146 106,136 106,84"
+    fill="#35d0a4"
+  />
+</svg>

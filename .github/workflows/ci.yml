@@ -1,0 +1,49 @@
+name: CI
+
+# Runs the same checks a real release build does (minus signing/publishing)
+# on every PR, regardless of target branch — this repo's release.yml only
+# triggers on pushes to master, so without this, the native core.dll build
+# in particular wouldn't get exercised until an actual release run, well
+# after a PR has already merged. No secrets are needed here (no signing, no
+# publishing), so this runs the same for PRs from forks too.
+on:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      # Unsigned, unpublished — same build a release does otherwise. This is
+      # also what actually exercises scripts/build-pengu-core.mjs (via the
+      # prebuild:win hook) and electron-builder.yml's extraResources config,
+      # which nothing else in CI currently touches before a real release.
+      - name: Build (unsigned, unpublished)
+        run: npm run build:win

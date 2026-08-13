@@ -1,0 +1,90 @@
+:root {
+  /* Dark is the default palette — deep graphite, not pure black, so panels
+     have depth without glow. Overridden by :root[data-theme='light']. */
+  --bg-app: #0b0d11;
+  --bg-surface: #12151b;
+  --bg-surface-raised: #171b22;
+  --bg-surface-hover: #1d222b;
+  --bg-surface-pressed: #21272f;
+
+  --border-subtle: #20242c;
+  --border-strong: #2c323c;
+
+  --text-primary: #e7e9ee;
+  --text-secondary: #9aa1ad;
+  --text-tertiary: #656d7a;
+  --text-on-accent: #06110d;
+
+  /* Accent — a single signal color, used sparingly for state/interaction only */
+  --accent: #35d0a4;
+  --accent-strong: #22b78d;
+  --accent-soft: rgba(53, 208, 164, 0.14);
+  --accent-border: rgba(53, 208, 164, 0.4);
+
+  --status-warn: #e0a83e;
+  --status-warn-soft: rgba(224, 168, 62, 0.14);
+  --status-warn-border: rgba(224, 168, 62, 0.4);
+  --status-danger: #e2564f;
+  --status-danger-soft: rgba(226, 86, 79, 0.14);
+  --status-danger-border: rgba(226, 86, 79, 0.4);
+  --status-offline: #656d7a;
+  --status-offline-soft: rgba(101, 109, 122, 0.14);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  /* Type */
+  --font-sans:
+    'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Shape — angular, not the default rounded-2xl everything */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  --titlebar-height: 44px;
+  --sidebar-width: 72px;
+}
+
+/* Light theme — same structure, tuned for a white/near-white surface stack.
+   The accent teal and text-on-accent stay the same; they already read fine
+   on both ends. */
+:root[data-theme='light'] {
+  --bg-app: #f4f5f7;
+  --bg-surface: #ffffff;
+  --bg-surface-raised: #eef0f3;
+  --bg-surface-hover: #e5e8ec;
+  --bg-surface-pressed: #dde1e6;
+
+  --border-subtle: #e2e5ea;
+  --border-strong: #cdd2d9;
+
+  --text-primary: #14171c;
+  --text-secondary: #4b525c;
+  --text-tertiary: #767d87;
+
+  --accent-soft: rgba(53, 208, 164, 0.16);
+  --accent-border: rgba(53, 208, 164, 0.45);
+
+  --status-warn: #a3690f;
+  --status-warn-soft: rgba(163, 105, 15, 0.12);
+  --status-warn-border: rgba(163, 105, 15, 0.4);
+  --status-danger: #c93f38;
+  --status-danger-soft: rgba(201, 63, 56, 0.12);
+  --status-danger-border: rgba(201, 63, 56, 0.4);
+  --status-offline: #767d87;
+  --status-offline-soft: rgba(118, 125, 135, 0.12);
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 32, 0.08);
+  --shadow-md: 0 4px 12px rgba(15, 23, 32, 0.1);
+}

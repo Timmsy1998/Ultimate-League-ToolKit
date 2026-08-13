@@ -1,0 +1,52 @@
+# Claude / AI assistant local rules — never shared via git history
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+
+# GitHub ruleset JSON — config for GitHub itself (imported via the web UI),
+# not part of the codebase
+github-rulesets/
+
+# Dependencies
+node_modules/
+
+# Build output (note: build/ is NOT ignored — it holds versioned
+# electron-builder resources such as icon.ico)
+dist/
+dist-electron/
+out/
+release/
+
+# Built by scripts/build-pengu-core.mjs (or CI) from native/vendor/pengu-loader
+# — never committed, same as the rest of the electron-builder output.
+resources/pengu-core/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Electron packaging
+*.exe
+*.dmg
+*.AppImage
+
+# Misc
+*.tsbuildinfo
+.eslintcache

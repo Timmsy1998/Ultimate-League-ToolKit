@@ -1,0 +1,80 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-1);
+  padding-top: var(--space-5);
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-3);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.tagline {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.version {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.description {
+  max-width: 48ch;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.linkButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  text-decoration: none;
+}
+
+.linkButton:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-hover);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
