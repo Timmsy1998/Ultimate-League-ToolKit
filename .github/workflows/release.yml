@@ -4,6 +4,16 @@ name: Release
 # master is the current version-integration branch being merged — so every
 # push here is a real release candidate. semantic-release reads Conventional
 # Commit messages since the last tag to decide whether (and how) to bump.
+#
+# Installer signing goes through SignPath (see CLAUDE.md §7). This workflow
+# needs, in this repo's GitHub Settings → Secrets and variables → Actions:
+#   Secret:    SIGNPATH_API_TOKEN
+#   Variables: SIGNPATH_ORGANIZATION_ID, SIGNPATH_PROJECT_SLUG,
+#              SIGNPATH_SIGNING_POLICY_SLUG
+#              (SIGNPATH_ARTIFACT_CONFIGURATION_SLUG only if it isn't
+#              named "default" in the SignPath project)
+# all of which come from a SignPath organization/project set up for this
+# repo — see https://signpath.io/solutions/open-source-community.
 on:
   push:
     branches: [master]
@@ -52,8 +62,48 @@ jobs:
         shell: bash
         run: npm version ${{ steps.semrel.outputs.new-release-version }} --no-git-tag-version --allow-same-version
 
-      - name: Build and publish installer
+      # Unsigned on purpose — electron-builder computes latest.yml's sha512
+      # from whatever's on disk when it runs, so if that ever runs against a
+      # signed exe, the manifest would need regenerating too. Instead this
+      # build stays unsigned, the exe gets signed by SignPath below, and only
+      # then does fix-latest-yml.mjs (re)compute the manifest hash — against
+      # the actual signed bytes that get published.
+      - name: Build installer (unsigned)
         if: steps.semrel.outputs.new-release-published == 'true'
-        run: npm run release:win
+        run: npm run build:win
+
+      - name: Upload unsigned installer for signing
+        if: steps.semrel.outputs.new-release-published == 'true'
+        id: upload-unsigned-installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer
+          path: release/*-setup.exe
+          retention-days: 1
+
+      - name: Submit to SignPath
+        if: steps.semrel.outputs.new-release-published == 'true'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'default' }}
+          github-artifact-id: ${{ steps.upload-unsigned-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Restore signed installer and fix update manifest
+        if: steps.semrel.outputs.new-release-published == 'true'
+        shell: bash
+        run: |
+          cp signed/*-setup.exe release/
+          node scripts/fix-latest-yml.mjs
+
+      - name: Publish release assets
+        if: steps.semrel.outputs.new-release-published == 'true'
+        shell: bash
+        run: gh release upload "v${{ steps.semrel.outputs.new-release-version }}" release/*-setup.exe release/latest.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
