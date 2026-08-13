@@ -49,8 +49,13 @@ async function main() {
   try {
     // Generates plugins/dist/preload.g.h, which core.vcxproj needs to
     // compile — must run before the msbuild step below.
-    await execFileAsync('pnpm', ['install', '--frozen-lockfile'], { cwd: pluginsDir })
-    await execFileAsync('pnpm', ['build'], { cwd: pluginsDir })
+    //
+    // shell: true because pnpm ships as a .cmd shim on Windows — Node's
+    // child_process can't exec that directly (a classic "spawn npm ENOENT
+    // on Windows" gotcha, same root cause, different package manager),
+    // even when it's genuinely on PATH.
+    await execFileAsync('pnpm', ['install', '--frozen-lockfile'], { cwd: pluginsDir, shell: true })
+    await execFileAsync('pnpm', ['build'], { cwd: pluginsDir, shell: true })
 
     await execFileAsync(
       'msbuild',
