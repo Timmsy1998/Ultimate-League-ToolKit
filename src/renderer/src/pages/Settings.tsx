@@ -137,6 +137,15 @@ export function Settings(): React.JSX.Element {
               checked={settings.dodgeToolEnabled}
               onChange={(checked) => updateSettings({ dodgeToolEnabled: checked })}
               label="Dodge button"
+              <p className={settingsStyles.rowTitle}>Loot Helper</p>
+              <p className={settingsStyles.rowDescription}>
+                Show the Loot Helper card on the Tools page for disenchanting shards and opening chests.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.lootHelperEnabled}
+              onChange={(checked) => updateSettings({ lootHelperEnabled: checked })}
+              label="Loot Helper"
             />
           </div>
         </div>

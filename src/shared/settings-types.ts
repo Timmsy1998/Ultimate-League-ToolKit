@@ -6,6 +6,7 @@ export interface Settings {
   notificationsEnabled: boolean
   autoAcceptReadyCheck: boolean
   dodgeToolEnabled: boolean
+  lootHelperEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -14,4 +15,5 @@ export const DEFAULT_SETTINGS: Settings = {
   notificationsEnabled: true,
   autoAcceptReadyCheck: false,
   dodgeToolEnabled: true
+  lootHelperEnabled: true
 }

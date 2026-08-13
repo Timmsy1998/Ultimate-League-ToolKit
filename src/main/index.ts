@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, nativeTheme, session, shell } from 'electr
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { LcuConnectionManager } from './lcu/connection-manager'
-import { isAllowedAssetPath, isImportRunePageRequest } from './lcu/validate'
+import { isAllowedAssetPath, isDisenchantRequest, isImportRunePageRequest } from './lcu/validate'
 import { notify } from './notifications/notifier'
 import * as rankHistoryStore from './rank-history/store'
 import * as runeBookStore from './rune-book/store'
@@ -136,6 +136,11 @@ function registerLcuBridge(): void {
     return lcuManager.importRunePage(request)
   })
   ipcMain.handle('lcu:leave-lobby', () => lcuManager.leaveLobby())
+  ipcMain.handle('lcu:get-loot', () => lcuManager.getLoot())
+  ipcMain.handle('lcu:disenchant-loot', (_event, request: unknown) => {
+    if (!isDisenchantRequest(request)) return Promise.reject(new Error('Invalid disenchant request'))
+    return lcuManager.disenchantLoot(request.recipeName, request.lootIds)
+  })
 
   lcuManager.start()
 }
