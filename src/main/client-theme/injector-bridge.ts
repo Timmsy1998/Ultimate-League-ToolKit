@@ -47,6 +47,40 @@ function pluginDir(): string {
   return path.join(pluginsDir(), PLUGIN_DIR_NAME)
 }
 
+// Windows command-line argument quoting per the CommandLineToArgvW
+// convention that reg.exe (like any standard console app) expects: wrap in
+// double quotes if the value has whitespace or a literal quote, doubling
+// any backslash run that immediately precedes a quote and escaping the
+// quote itself. Needed because the Debugger value below
+// (`rundll32 "C:\...\core.dll",#6000`) already contains embedded double
+// quotes and a comma — PowerShell's own Start-Process -ArgumentList,
+// given an *array* of loosely-quoted strings, doesn't reliably re-escape
+// an element that already contains embedded quotes when it flattens the
+// array into the actual process command line, which was silently
+// mangling this argument and making reg.exe fail even with UAC approved.
+// Building the exact command line ourselves and passing it as a single
+// string sidesteps that flattening step entirely.
+function quoteWindowsArg(arg: string): string {
+  if (arg.length > 0 && !/[\s"]/.test(arg)) return arg
+  let result = '"'
+  let backslashes = 0
+  for (const ch of arg) {
+    if (ch === '\\') {
+      backslashes++
+      continue
+    }
+    if (ch === '"') {
+      result += '\\'.repeat(backslashes * 2 + 1) + '"'
+      backslashes = 0
+      continue
+    }
+    result += '\\'.repeat(backslashes) + ch
+    backslashes = 0
+  }
+  result += '\\'.repeat(backslashes * 2) + '"'
+  return result
+}
+
 // Registry writes to HKLM need elevation. Rather than run all of ULTK
 // elevated the way PenguLoader's own loader app does (its App.manifest
 // requests requireAdministrator for the whole process), this spawns one
@@ -55,14 +89,15 @@ function pluginDir(): string {
 // Electron hardening defaults.
 function runElevatedReg(regArgs: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
-    const argList = regArgs.map((arg) => `'${arg.replace(/'/g, "''")}'`).join(',')
+    const regCommandLine = regArgs.map(quoteWindowsArg).join(' ')
+    const escapedForPowerShell = regCommandLine.replace(/'/g, "''")
     // -PassThru is required to get reg.exe's own exit code back. Without
     // it, `Start-Process -Wait` only reports whether *launching* the
     // elevated process succeeded — if reg.exe itself then failed (or
     // returned non-zero for any reason short of the UAC prompt being
     // cancelled outright), the outer powershell.exe still exits 0 and
     // this looked like success even though nothing was written.
-    const psCommand = `$p = Start-Process -FilePath 'reg.exe' -ArgumentList ${argList} -Verb RunAs -Wait -WindowStyle Hidden -PassThru; exit $p.ExitCode`
+    const psCommand = `$p = Start-Process -FilePath 'reg.exe' -ArgumentList '${escapedForPowerShell}' -Verb RunAs -Wait -WindowStyle Hidden -PassThru; exit $p.ExitCode`
     const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', psCommand], {
       windowsHide: true
     })
