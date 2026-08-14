@@ -20,6 +20,7 @@ import type {
 } from '../shared/lcu-types'
 import type { RankHistory } from '../shared/rank-history-types'
 import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
+import type { ClientThemeApplyResult } from '../shared/client-theme-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
 
@@ -89,12 +90,17 @@ const theme = {
 // Distinct from `theme` above — this is the League Client reskin feature
 // (CLAUDE.md §5a), not ULTK's own dark/light appearance.
 const clientTheme = {
-  apply: (): Promise<void> => ipcRenderer.invoke('client-theme:apply'),
+  apply: (): Promise<ClientThemeApplyResult> => ipcRenderer.invoke('client-theme:apply'),
   enable: (): Promise<void> => ipcRenderer.invoke('client-theme:enable'),
   disable: (): Promise<void> => ipcRenderer.invoke('client-theme:disable'),
   status: (): Promise<boolean> => ipcRenderer.invoke('client-theme:status'),
   getLog: (): Promise<string[]> => ipcRenderer.invoke('client-theme:get-log'),
-  openLogFolder: (): Promise<void> => ipcRenderer.invoke('client-theme:open-log-folder')
+  openLogFolder: (): Promise<void> => ipcRenderer.invoke('client-theme:open-log-folder'),
+  setBackgroundAsset: (bytes: ArrayBuffer): Promise<string> =>
+    ipcRenderer.invoke('client-theme:set-background-asset', bytes),
+  clearBackgroundAsset: (): Promise<void> => ipcRenderer.invoke('client-theme:clear-background-asset'),
+  setFontAsset: (bytes: ArrayBuffer): Promise<string> => ipcRenderer.invoke('client-theme:set-font-asset', bytes),
+  clearFontAsset: (): Promise<void> => ipcRenderer.invoke('client-theme:clear-font-asset')
 }
 
 const updater = {

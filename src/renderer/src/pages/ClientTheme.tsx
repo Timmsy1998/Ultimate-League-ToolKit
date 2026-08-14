@@ -2,11 +2,42 @@ import { useEffect, useState } from 'react'
 import { Check, FolderOpen, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Toggle } from '@renderer/components/Toggle/Toggle'
 import { useSettings } from '@renderer/settings/SettingsContext'
+import type { ClientThemeApplyResult } from '../../../shared/client-theme-types'
 import themeStyles from './ClientTheme.module.css'
 import styles from './Page.module.css'
 import settingsStyles from './Settings.module.css'
 
+function describeApplyResult(result: ClientThemeApplyResult): string {
+  if (result.reloaded) return 'Saved — reloaded the League Client with the new theme.'
+  switch (result.reason) {
+    case 'hook-disabled':
+      return 'Saved — enable the client hook above for this to apply automatically. Otherwise it takes effect next restart.'
+    case 'not-connected':
+      return "Saved — takes effect next time the League Client (re)starts (it's not running right now)."
+    case 'unsafe-phase':
+      return "Saved — didn't reload automatically since you're mid-match or in champ select. Takes effect next restart."
+    case 'restart-failed':
+      return 'Saved, but the automatic reload failed. Takes effect next time the client (re)starts.'
+  }
+}
+
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp'
+const BACKGROUND_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm'
+
+function clientSideSizeLimit(mimeType: string): number {
+  if (mimeType === 'image/gif') return 25 * 1024 * 1024
+  if (mimeType === 'video/mp4' || mimeType === 'video/webm') return 100 * 1024 * 1024
+  return 8 * 1024 * 1024
+}
+
+function describeBackgroundValue(value: string | null): string {
+  if (!value) return 'Using the client default.'
+  if (value.startsWith('data:')) return 'Custom background set.'
+  const ext = value.split('.').pop()
+  if (ext === 'mp4' || ext === 'webm') return 'Custom video background set.'
+  if (ext === 'gif') return 'Custom GIF background set.'
+  return 'Custom background set.'
+}
 
 const FONT_PRESETS = [
   { label: 'Client default', value: null },
@@ -14,7 +45,14 @@ const FONT_PRESETS = [
   { label: 'IBM Plex Mono', value: '"IBM Plex Mono", monospace' }
 ] as const
 
-type ImageField = 'clientThemeBackground' | 'clientThemeBannerImage' | 'clientThemeIconImage'
+const FONT_FILE_ACCEPT = '.ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2'
+const MAX_FONT_BYTES = 5 * 1024 * 1024
+
+function describeFontAsset(value: string | null): string {
+  return value ? 'Custom font set — overrides the preset above.' : 'Or upload your own TTF, OTF, WOFF, or WOFF2 file.'
+}
+
+type ImageField = 'clientThemeBannerImage' | 'clientThemeIconImage'
 
 function readImageAsDataUri(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -29,11 +67,21 @@ interface ImagePickerRowProps {
   title: string
   description: string
   value: string | null
+  accept?: string
+  buttonLabel?: string
   onPick: (file: File) => void
   onClear: () => void
 }
 
-function ImagePickerRow({ title, description, value, onPick, onClear }: ImagePickerRowProps): React.JSX.Element {
+function ImagePickerRow({
+  title,
+  description,
+  value,
+  accept = IMAGE_ACCEPT,
+  buttonLabel = 'Choose image',
+  onPick,
+  onClear
+}: ImagePickerRowProps): React.JSX.Element {
   return (
     <div className={settingsStyles.row}>
       <div>
@@ -42,10 +90,10 @@ function ImagePickerRow({ title, description, value, onPick, onClear }: ImagePic
       </div>
       <div className={themeStyles.actions}>
         <label className={`${settingsStyles.updateButton} ${themeStyles.fileButton}`}>
-          Choose image
+          {buttonLabel}
           <input
             type="file"
-            accept={IMAGE_ACCEPT}
+            accept={accept}
             className={themeStyles.fileInput}
             onChange={(e) => {
               const file = e.target.files?.[0]
@@ -72,6 +120,8 @@ export function ClientTheme(): React.JSX.Element {
   const [applying, setApplying] = useState(false)
   const [logLines, setLogLines] = useState<string[]>([])
   const [logLoading, setLogLoading] = useState(false)
+  const [backgroundStatus, setBackgroundStatus] = useState<string | null>(null)
+  const [fontStatus, setFontStatus] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -102,6 +152,58 @@ export function ClientTheme(): React.JSX.Element {
     updateSettings({ [field]: dataUri })
   }
 
+  async function pickBackground(file: File): Promise<void> {
+    setBackgroundStatus(null)
+    const limit = clientSideSizeLimit(file.type)
+    if (file.size > limit) {
+      setBackgroundStatus(`That file is too large (max ${Math.round(limit / (1024 * 1024))} MB for this type).`)
+      return
+    }
+    try {
+      const bytes = await file.arrayBuffer()
+      const filename = await window.api.clientTheme.setBackgroundAsset(bytes)
+      updateSettings({ clientThemeBackground: filename })
+    } catch (err) {
+      setBackgroundStatus(err instanceof Error ? err.message : 'Failed to set background.')
+    }
+  }
+
+  async function clearBackground(): Promise<void> {
+    setBackgroundStatus(null)
+    await window.api.clientTheme.clearBackgroundAsset()
+    updateSettings({ clientThemeBackground: null })
+  }
+
+  async function pickFont(file: File): Promise<void> {
+    setFontStatus(null)
+    if (file.size > MAX_FONT_BYTES) {
+      setFontStatus('That font file is too large (max 5 MB).')
+      return
+    }
+    try {
+      const bytes = await file.arrayBuffer()
+      const filename = await window.api.clientTheme.setFontAsset(bytes)
+      // Custom font and the preset dropdown are mutually exclusive — the
+      // upload wins, so clear the preset here.
+      updateSettings({ clientThemeCustomFontAsset: filename, clientThemeFont: null })
+    } catch (err) {
+      setFontStatus(err instanceof Error ? err.message : 'Failed to set font.')
+    }
+  }
+
+  async function clearFont(): Promise<void> {
+    setFontStatus(null)
+    await window.api.clientTheme.clearFontAsset()
+    updateSettings({ clientThemeCustomFontAsset: null })
+  }
+
+  async function pickFontPreset(value: string | null): Promise<void> {
+    if (settings.clientThemeCustomFontAsset) {
+      await window.api.clientTheme.clearFontAsset()
+    }
+    updateSettings({ clientThemeFont: value, clientThemeCustomFontAsset: null })
+  }
+
   async function toggleInjector(enable: boolean): Promise<void> {
     setInjectorBusy(true)
     setInjectorStatus(null)
@@ -127,8 +229,8 @@ export function ClientTheme(): React.JSX.Element {
     setApplying(true)
     setApplyStatus(null)
     try {
-      await window.api.clientTheme.apply()
-      setApplyStatus('Saved — takes effect next time the League Client (re)starts.')
+      const result = await window.api.clientTheme.apply()
+      setApplyStatus(describeApplyResult(result))
     } catch (err) {
       setApplyStatus(err instanceof Error ? err.message : 'Failed to apply theme.')
     } finally {
@@ -238,11 +340,28 @@ export function ClientTheme(): React.JSX.Element {
         <div className={settingsStyles.panel}>
           <ImagePickerRow
             title="Background"
-            description={settings.clientThemeBackground ? 'Custom background set.' : 'Using the client default.'}
+            description={backgroundStatus ?? describeBackgroundValue(settings.clientThemeBackground)}
             value={settings.clientThemeBackground}
-            onPick={(file) => void pickImage('clientThemeBackground', file)}
-            onClear={() => updateSettings({ clientThemeBackground: null })}
+            accept={BACKGROUND_ACCEPT}
+            buttonLabel="Choose image, GIF, or video"
+            onPick={(file) => void pickBackground(file)}
+            onClear={() => void clearBackground()}
           />
+          <div className={settingsStyles.divider} />
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Reduced motion</p>
+              <p className={settingsStyles.rowDescription}>
+                Skips playing video and GIF backgrounds — lighter on CPU/GPU. Worth turning on for older or laptop
+                hardware.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.clientThemeReducedMotion}
+              onChange={(checked) => updateSettings({ clientThemeReducedMotion: checked })}
+              label="Reduced motion"
+            />
+          </div>
           <div className={settingsStyles.divider} />
           <div className={settingsStyles.row}>
             <div>
@@ -278,7 +397,8 @@ export function ClientTheme(): React.JSX.Element {
             <select
               className={themeStyles.fontSelect}
               value={settings.clientThemeFont ?? ''}
-              onChange={(e) => updateSettings({ clientThemeFont: e.target.value || null })}
+              disabled={!!settings.clientThemeCustomFontAsset}
+              onChange={(e) => void pickFontPreset(e.target.value || null)}
             >
               {FONT_PRESETS.map((preset) => (
                 <option key={preset.label} value={preset.value ?? ''}>
@@ -287,6 +407,16 @@ export function ClientTheme(): React.JSX.Element {
               ))}
             </select>
           </div>
+          <div className={settingsStyles.divider} />
+          <ImagePickerRow
+            title="Custom font"
+            description={fontStatus ?? describeFontAsset(settings.clientThemeCustomFontAsset)}
+            value={settings.clientThemeCustomFontAsset}
+            accept={FONT_FILE_ACCEPT}
+            buttonLabel="Choose font file"
+            onPick={(file) => void pickFont(file)}
+            onClear={() => void clearFont()}
+          />
         </div>
       </section>
 

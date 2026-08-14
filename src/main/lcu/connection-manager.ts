@@ -11,6 +11,7 @@ import { fetchGameSession } from './game-session'
 import { leaveLobby } from './lobby'
 import { craftDisenchant, fetchLoot } from './loot'
 import { fetchRankedStats } from './ranked'
+import { restartClientUx } from './riot-client'
 import { fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
 import { fetchMatchHistory } from './match-history'
 import * as rankHistoryStore from '../rank-history/store'
@@ -176,6 +177,13 @@ export class LcuConnectionManager extends EventEmitter {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
     await leaveLobby(this.client)
+  }
+
+  async restartClientUx(): Promise<void> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    await restartClientUx(this.client)
   }
 
   getLoot(): Promise<LootSummary> {

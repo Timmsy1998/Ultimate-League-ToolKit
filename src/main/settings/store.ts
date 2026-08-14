@@ -28,6 +28,18 @@ function isNullableDataUri(value: unknown): boolean {
   return typeof value === 'string' && value.length <= MAX_DATA_URI_LENGTH && DATA_IMAGE_URI_PATTERN.test(value)
 }
 
+// Backgrounds are either a legacy data URI (old settings, images only) or
+// a filename the client-theme asset store generated itself — never
+// anything else, since that value later gets embedded as a plugin asset
+// reference. See src/main/client-theme/asset-store.ts.
+const BACKGROUND_ASSET_PATTERN = /^background\.(png|jpg|webp|gif|mp4|webm)$/
+
+function isNullableBackgroundValue(value: unknown): boolean {
+  if (value === null) return true
+  if (typeof value !== 'string') return false
+  return isNullableDataUri(value) || BACKGROUND_ASSET_PATTERN.test(value)
+}
+
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 function isNullableHexColor(value: unknown): boolean {
@@ -40,6 +52,14 @@ function isNullableFontName(value: unknown): boolean {
   return value === null || (typeof value === 'string' && SAFE_FONT_NAME_PATTERN.test(value))
 }
 
+// Same closed-enum approach as backgrounds — a main-process-generated
+// filename, never anything the renderer supplies directly.
+const CUSTOM_FONT_ASSET_PATTERN = /^custom-font\.(ttf|otf|woff2?)$/
+
+function isNullableCustomFontAsset(value: unknown): boolean {
+  return value === null || (typeof value === 'string' && CUSTOM_FONT_ASSET_PATTERN.test(value))
+}
+
 function isPartialSettings(value: unknown): value is Partial<Settings> {
   if (!value || typeof value !== 'object') return false
   const v = value as Record<string, unknown>
@@ -50,9 +70,11 @@ function isPartialSettings(value: unknown): value is Partial<Settings> {
   if ('dodgeToolEnabled' in v && typeof v.dodgeToolEnabled !== 'boolean') return false
   if ('lootHelperEnabled' in v && typeof v.lootHelperEnabled !== 'boolean') return false
   if ('clientThemeEnabled' in v && typeof v.clientThemeEnabled !== 'boolean') return false
-  if ('clientThemeBackground' in v && !isNullableDataUri(v.clientThemeBackground)) return false
+  if ('clientThemeBackground' in v && !isNullableBackgroundValue(v.clientThemeBackground)) return false
+  if ('clientThemeReducedMotion' in v && typeof v.clientThemeReducedMotion !== 'boolean') return false
   if ('clientThemeAccentColor' in v && !isNullableHexColor(v.clientThemeAccentColor)) return false
   if ('clientThemeFont' in v && !isNullableFontName(v.clientThemeFont)) return false
+  if ('clientThemeCustomFontAsset' in v && !isNullableCustomFontAsset(v.clientThemeCustomFontAsset)) return false
   if ('clientThemeBannerImage' in v && !isNullableDataUri(v.clientThemeBannerImage)) return false
   if ('clientThemeIconImage' in v && !isNullableDataUri(v.clientThemeIconImage)) return false
   if ('inviteFriendsEnabled' in v && typeof v.inviteFriendsEnabled !== 'boolean') return false
