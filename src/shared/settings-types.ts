@@ -29,6 +29,12 @@ export interface Settings {
   clientThemeBannerImage: string | null // data URI
   clientThemeIconImage: string | null // data URI
   inviteFriendsEnabled: boolean
+  // Renders Dodge/Invite Friends/Loot Helper as an in-client panel via the
+  // same injection mechanism as Client Theme (CLAUDE.md §5b) — a fixed,
+  // closed list, distinct from clientThemeEnabled since it's a functional
+  // carve-out, not cosmetic. Off by default; applied via the same "Save"
+  // action as the rest of the client hook.
+  injectedToolsEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -46,5 +52,6 @@ export const DEFAULT_SETTINGS: Settings = {
   clientThemeCustomFontAsset: null,
   clientThemeBannerImage: null,
   clientThemeIconImage: null,
-  inviteFriendsEnabled: true
+  inviteFriendsEnabled: true,
+  injectedToolsEnabled: false
 }

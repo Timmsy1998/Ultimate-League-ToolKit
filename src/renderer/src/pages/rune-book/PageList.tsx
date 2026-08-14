@@ -1,4 +1,4 @@
-import { BookOpen, Copy, Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { BookOpen, Copy, Download, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { EmptyState } from '@renderer/components/EmptyState/EmptyState'
 import type { RuneBookPage } from '../../../../shared/rune-book-types'
 import styles from './PageList.module.css'
@@ -12,6 +12,7 @@ interface PageListProps {
   onDuplicate: (page: RuneBookPage) => void
   onDelete: (page: RuneBookPage) => void
   onImport: (page: RuneBookPage) => void
+  onPullFromClient: () => void
 }
 
 export function PageList({
@@ -22,16 +23,23 @@ export function PageList({
   onEdit,
   onDuplicate,
   onDelete,
-  onImport
+  onImport,
+  onPullFromClient
 }: PageListProps): React.JSX.Element {
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
         <h3 className={styles.title}>{title}</h3>
-        <button type="button" className={styles.newButton} onClick={onNew}>
-          <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
-          New page
-        </button>
+        <div className={styles.headerActions}>
+          <button type="button" className={styles.pullButton} onClick={onPullFromClient} title="Pull a page from the client">
+            <Download size={14} strokeWidth={1.75} aria-hidden="true" />
+            Pull from client
+          </button>
+          <button type="button" className={styles.newButton} onClick={onNew}>
+            <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
+            New page
+          </button>
+        </div>
       </div>
 
       {pages.length === 0 ? (

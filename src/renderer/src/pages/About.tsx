@@ -1,22 +1,28 @@
 import { GitFork, ScrollText, ShieldCheck } from 'lucide-react'
 import logo from '@renderer/assets/logo.svg'
+import { useAppVersion } from '@renderer/updater/useAppVersion'
 import styles from './Page.module.css'
 import aboutStyles from './About.module.css'
 
 export function About(): React.JSX.Element {
+  const version = useAppVersion()
+
   return (
     <div className={styles.page}>
       <div className={aboutStyles.hero}>
         <img src={logo} alt="ULTK" className={aboutStyles.logo} />
         <h1 className={aboutStyles.name}>ULTK</h1>
         <p className={aboutStyles.tagline}>Ultimate League ToolKit</p>
-        <p className={aboutStyles.version}>Version 0.1.0</p>
+        <p className={aboutStyles.version}>{version ? `Version ${version}` : 'Loading version…'}</p>
       </div>
 
       <p className={aboutStyles.description}>
         An open source companion app for League of Legends, built on the local client API. No
-        memory access, no injection, no interaction with Vanguard, and no gameplay automation —
-        just client-side tools.
+        game or client process memory access, no interaction with Vanguard, and no gameplay
+        automation. The one narrow, always opt-in exception is client theming — a cosmetic reskin
+        of the League Client's own UI, plus an in-client panel for three fixed tools (Dodge,
+        Invite Friends, Loot Helper) that calls back into ULTK's own client-side logic. Both are
+        off by default and reversible with one click.
       </p>
 
       <div className={aboutStyles.links}>
@@ -30,7 +36,7 @@ export function About(): React.JSX.Element {
         </a>
         <a
           className={aboutStyles.linkButton}
-          href="https://github.com/Timmsy1998/Ultimate-League-ToolKit/blob/main/LICENSE"
+          href="https://github.com/Timmsy1998/Ultimate-League-ToolKit/blob/master/LICENSE"
           title="License"
         >
           <ScrollText size={16} strokeWidth={1.75} aria-hidden="true" />

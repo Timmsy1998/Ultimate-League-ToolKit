@@ -14,6 +14,7 @@ import type {
   LootSummary,
   PerkCatalog,
   RankedStats,
+  RunePageDetail,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
@@ -48,6 +49,7 @@ const lcu = {
   onRanked: (cb: (ranked: RankedStats | null) => void) => subscribe('lcu:ranked', cb),
   onGameSession: (cb: (session: GameSessionInfo | null) => void) => subscribe('lcu:game-session', cb),
   getRunePages: (): Promise<RunePageSummary[]> => ipcRenderer.invoke('lcu:get-rune-pages'),
+  getRunePageDetails: (): Promise<RunePageDetail[]> => ipcRenderer.invoke('lcu:get-rune-page-details'),
   getMatchHistory: (): Promise<MatchSummary[]> => ipcRenderer.invoke('lcu:get-match-history'),
   getPerkCatalog: (): Promise<PerkCatalog> => ipcRenderer.invoke('lcu:get-perk-catalog'),
   getChampions: (): Promise<ChampionSummary[]> => ipcRenderer.invoke('lcu:get-champions'),

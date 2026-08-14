@@ -26,7 +26,7 @@ const BACKGROUND_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,video/mp4,v
 
 function clientSideSizeLimit(mimeType: string): number {
   if (mimeType === 'image/gif') return 25 * 1024 * 1024
-  if (mimeType === 'video/mp4' || mimeType === 'video/webm') return 100 * 1024 * 1024
+  if (mimeType === 'video/mp4' || mimeType === 'video/webm') return 250 * 1024 * 1024
   return 8 * 1024 * 1024
 }
 
@@ -438,6 +438,27 @@ export function ClientTheme(): React.JSX.Element {
             onPick={(file) => void pickImage('clientThemeIconImage', file)}
             onClear={() => updateSettings({ clientThemeIconImage: null })}
           />
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>In-client tools</h2>
+        <div className={settingsStyles.panel}>
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Show ULTK tools in the client</p>
+              <p className={settingsStyles.rowDescription}>
+                Adds a small ULTK panel inside the League Client itself for Dodge, Invite Friends, and Loot Helper —
+                nothing else. Every action still needs an explicit click in that panel; nothing fires
+                automatically. Requires the client hook above.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.injectedToolsEnabled}
+              onChange={(checked) => updateSettings({ injectedToolsEnabled: checked })}
+              label="Show ULTK tools in the client"
+            />
+          </div>
         </div>
       </section>
 

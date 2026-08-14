@@ -3,6 +3,7 @@ import type {
   ImportRunePageRequest,
   ImportRunePageResult,
   PerkCatalog,
+  RunePageDetail,
   RunePageSummary,
   RunePerk,
   RuneStyle
@@ -100,6 +101,28 @@ export async function fetchEditableRunePages(client: LcuHttpClient): Promise<Edi
     .filter(isRawRunePage)
     .filter((page) => page.isEditable !== false)
     .map((page) => ({ id: page.id, name: page.name, isEditable: page.isEditable !== false }))
+}
+
+// Full pages, for pulling a page *out* of the client into the rune book.
+// Only pages with a complete 9-perk selection are usable — a page the
+// client itself hasn't fully filled in yet can't be reconstructed into a
+// valid RuneSelection, so it's silently dropped here rather than surfaced
+// as a broken pull target.
+export async function fetchRunePageDetails(client: LcuHttpClient): Promise<RunePageDetail[]> {
+  const rawPages = await client.get<unknown>('/lol-perks/v1/pages')
+  if (!Array.isArray(rawPages)) return []
+
+  return rawPages
+    .filter(isRawRunePage)
+    .filter((page) => Array.isArray(page.selectedPerkIds) && page.selectedPerkIds.length === 9)
+    .map((page) => ({
+      id: page.id,
+      name: page.name,
+      current: page.current === true,
+      primaryStyleId: page.primaryStyleId,
+      subStyleId: page.subStyleId,
+      selectedPerkIds: page.selectedPerkIds as number[]
+    }))
 }
 
 // Each of the 5 real trees carries its own keystone slot (type kKeyStone)

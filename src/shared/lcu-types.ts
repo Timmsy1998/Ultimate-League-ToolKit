@@ -125,6 +125,19 @@ export interface EditableRunePage {
   isEditable: boolean
 }
 
+// Full client rune page, as needed to pull a page *into* the rune book —
+// unlike RunePageSummary (display-only names) this carries everything
+// needed to reconstruct a RuneSelection: the raw style ids and the flat
+// selected-perk-id list the LCU itself uses.
+export interface RunePageDetail {
+  id: number
+  name: string
+  current: boolean
+  primaryStyleId: number
+  subStyleId: number
+  selectedPerkIds: number[]
+}
+
 export interface ImportRunePageRequest {
   name: string
   championId: number | null
