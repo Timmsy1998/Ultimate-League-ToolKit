@@ -72,6 +72,8 @@ export interface ClientThemeBridge {
   status: () => Promise<boolean>
   getLog: () => Promise<string[]>
   openLogFolder: () => Promise<void>
+  setBackgroundAsset: (bytes: ArrayBuffer) => Promise<string>
+  clearBackgroundAsset: () => Promise<void>
 }
 
 export interface UpdaterBridge {

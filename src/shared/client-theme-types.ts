@@ -1,6 +1,10 @@
 export interface ClientThemePackage {
   css: string
   js: string
+  // Set when the background references a file in the asset store (gif,
+  // video, or an uploaded image) rather than a data URI — tells
+  // injector-bridge.ts what to copy into the plugin's own assets folder.
+  backgroundAssetFilename: string | null
 }
 
 // Why a live reload didn't happen, when it didn't — lets the UI explain
