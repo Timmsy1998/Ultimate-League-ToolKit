@@ -155,144 +155,160 @@ export function RuneEditor({ catalog, champion, initialPage, onSave, onCancel }:
 
       <hr className={styles.divider} />
 
-      <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Primary tree</p>
-          <p className={primaryStyle ? `${styles.sectionValue} ${styles.sectionValueShown}` : styles.sectionValue}>
-            {primaryStyle?.name}
-          </p>
-        </div>
-        <div className={styles.row}>
-          {catalog.styles.map((style) => (
-            <button
-              key={style.id}
-              type="button"
-              className={style.id === primaryStyleId ? `${styles.slot} ${styles.slotSelected}` : styles.slot}
-              onClick={() => selectPrimaryStyle(style)}
-              title={style.name}
-            >
-              <AssetIcon path={style.iconPath} label={style.name} size={32} />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {primaryStyle ? (
-        <>
+      <div className={styles.treesRow}>
+        <div className={styles.treeColumn}>
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <p className={styles.sectionLabel}>Keystone</p>
-              <p
-                className={
-                  keystoneId !== null ? `${styles.sectionValue} ${styles.sectionValueShown}` : styles.sectionValue
-                }
-              >
-                {perkName(catalog, keystoneId)}
+              <p className={styles.sectionLabel}>Primary tree</p>
+              <p className={primaryStyle ? `${styles.sectionValue} ${styles.sectionValueShown}` : styles.sectionValue}>
+                {primaryStyle?.name}
               </p>
             </div>
             <div className={styles.row}>
-              {(primaryStyle.slots[0]?.perkIds ?? []).map((perkId) => (
+              {catalog.styles.map((style) => (
                 <button
-                  key={perkId}
+                  key={style.id}
                   type="button"
-                  className={perkId === keystoneId ? `${styles.slot} ${styles.slotSelected}` : styles.slot}
-                  onClick={() => setKeystoneId(perkId)}
-                  title={perkName(catalog, perkId)}
+                  className={style.id === primaryStyleId ? `${styles.slot} ${styles.slotSelected}` : styles.slot}
+                  onClick={() => selectPrimaryStyle(style)}
+                  title={style.name}
                 >
-                  <AssetIcon path={perkIconPath(catalog, perkId)} label={perkName(catalog, perkId)} size={36} round />
+                  <AssetIcon path={style.iconPath} label={style.name} size={32} />
                 </button>
               ))}
             </div>
           </div>
 
-          {primaryStyle.slots.slice(1).map((slot, rowIndex) => (
-            <div className={styles.section} key={`primary-row-${rowIndex}`}>
-              <div className={styles.row}>
-                {slot.perkIds.map((perkId) => (
-                  <button
-                    key={perkId}
-                    type="button"
+          {primaryStyle ? (
+            <>
+              <div className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <p className={styles.sectionLabel}>Keystone</p>
+                  <p
                     className={
-                      perkId === primaryPerkIds[rowIndex] ? `${styles.slot} ${styles.slotSelected}` : styles.slot
+                      keystoneId !== null ? `${styles.sectionValue} ${styles.sectionValueShown}` : styles.sectionValue
                     }
-                    onClick={() => togglePrimaryPerk(rowIndex, perkId)}
-                    title={perkName(catalog, perkId)}
                   >
-                    <AssetIcon path={perkIconPath(catalog, perkId)} label={perkName(catalog, perkId)} size={26} round />
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </>
-      ) : (
-        <p className={styles.hint}>Pick a primary tree to see its keystones and perks.</p>
-      )}
-
-      <hr className={styles.divider} />
-
-      <div className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Secondary tree</p>
-          <p className={subStyle ? `${styles.sectionValue} ${styles.sectionValueShown}` : styles.sectionValue}>
-            {subStyle?.name}
-          </p>
-        </div>
-        <div className={styles.row}>
-          {subStyleOptions.map((style) => (
-            <button
-              key={style.id}
-              type="button"
-              className={style.id === subStyleId ? `${styles.slot} ${styles.slotSelected}` : styles.slot}
-              onClick={() => selectSubStyle(style)}
-              title={style.name}
-            >
-              <AssetIcon path={style.iconPath} label={style.name} size={28} />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {subStyle ? (
-        <>
-          <p className={styles.hint}>Pick one perk from any 2 of the 3 rows below.</p>
-          {subStyle.slots.slice(1).map((slot, rowIndex) => {
-            const rowSelection = subPerkSelections.get(rowIndex) ?? null
-            const rowLocked = !subPerkSelections.has(rowIndex) && subPerkSelections.size >= 2
-            return (
-              <div className={styles.section} key={`sub-row-${rowIndex}`}>
+                    {perkName(catalog, keystoneId)}
+                  </p>
+                </div>
                 <div className={styles.row}>
-                  {slot.perkIds.map((perkId) => (
+                  {(primaryStyle.slots[0]?.perkIds ?? []).map((perkId) => (
                     <button
                       key={perkId}
                       type="button"
-                      disabled={rowLocked}
-                      className={[
-                        styles.slot,
-                        perkId === rowSelection ? styles.slotSelected : '',
-                        rowLocked ? styles.slotLocked : ''
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      onClick={() => toggleSubPerk(rowIndex, perkId)}
+                      className={perkId === keystoneId ? `${styles.slot} ${styles.slotSelected}` : styles.slot}
+                      onClick={() => setKeystoneId(perkId)}
                       title={perkName(catalog, perkId)}
                     >
                       <AssetIcon
                         path={perkIconPath(catalog, perkId)}
                         label={perkName(catalog, perkId)}
-                        size={26}
+                        size={36}
                         round
                       />
                     </button>
                   ))}
                 </div>
               </div>
-            )
-          })}
-        </>
-      ) : (
-        <p className={styles.hint}>Pick a secondary tree to see its perks.</p>
-      )}
+
+              {primaryStyle.slots.slice(1).map((slot, rowIndex) => (
+                <div className={styles.section} key={`primary-row-${rowIndex}`}>
+                  <div className={styles.row}>
+                    {slot.perkIds.map((perkId) => (
+                      <button
+                        key={perkId}
+                        type="button"
+                        className={
+                          perkId === primaryPerkIds[rowIndex] ? `${styles.slot} ${styles.slotSelected}` : styles.slot
+                        }
+                        onClick={() => togglePrimaryPerk(rowIndex, perkId)}
+                        title={perkName(catalog, perkId)}
+                      >
+                        <AssetIcon
+                          path={perkIconPath(catalog, perkId)}
+                          label={perkName(catalog, perkId)}
+                          size={26}
+                          round
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className={styles.hint}>Pick a primary tree to see its keystones and perks.</p>
+          )}
+        </div>
+
+        <div className={styles.treeDivider} />
+
+        <div className={styles.treeColumn}>
+          <div className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.sectionLabel}>Secondary tree</p>
+              <p className={subStyle ? `${styles.sectionValue} ${styles.sectionValueShown}` : styles.sectionValue}>
+                {subStyle?.name}
+              </p>
+            </div>
+            <div className={styles.row}>
+              {subStyleOptions.map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  className={style.id === subStyleId ? `${styles.slot} ${styles.slotSelected}` : styles.slot}
+                  onClick={() => selectSubStyle(style)}
+                  title={style.name}
+                >
+                  <AssetIcon path={style.iconPath} label={style.name} size={28} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {subStyle ? (
+            <>
+              <p className={styles.hint}>Pick one perk from any 2 of the 3 rows below.</p>
+              {subStyle.slots.slice(1).map((slot, rowIndex) => {
+                const rowSelection = subPerkSelections.get(rowIndex) ?? null
+                const rowLocked = !subPerkSelections.has(rowIndex) && subPerkSelections.size >= 2
+                return (
+                  <div className={styles.section} key={`sub-row-${rowIndex}`}>
+                    <div className={styles.row}>
+                      {slot.perkIds.map((perkId) => (
+                        <button
+                          key={perkId}
+                          type="button"
+                          disabled={rowLocked}
+                          className={[
+                            styles.slot,
+                            perkId === rowSelection ? styles.slotSelected : '',
+                            rowLocked ? styles.slotLocked : ''
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          onClick={() => toggleSubPerk(rowIndex, perkId)}
+                          title={perkName(catalog, perkId)}
+                        >
+                          <AssetIcon
+                            path={perkIconPath(catalog, perkId)}
+                            label={perkName(catalog, perkId)}
+                            size={26}
+                            round
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </>
+          ) : (
+            <p className={styles.hint}>Pick a secondary tree to see its perks.</p>
+          )}
+        </div>
+      </div>
 
       <hr className={styles.divider} />
 
