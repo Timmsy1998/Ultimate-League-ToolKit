@@ -1,5 +1,12 @@
 appId: com.ultk.app
 productName: ULTK
+# Explicit even though both already match electron-builder's defaults —
+# asar: true is already the default; npmRebuild: false skips a native-
+# dependency rebuild check that's pure overhead here since none of this
+# project's runtime dependencies (checked: no bufferutil/utf-8-validate
+# under ws, nothing else with a native addon) have anything to rebuild.
+asar: true
+npmRebuild: false
 directories:
   buildResources: build
   output: release
@@ -13,6 +20,13 @@ files:
 extraResources:
   - from: resources/pengu-core
     to: pengu-core
+  # Read at runtime for the system tray icon (see trayIconPath() in
+  # src/main/index.ts) — build/ itself is only a build-time asset source
+  # (buildResources above), not part of the app's own bundled files list,
+  # so the one icon the running app needs from it has to be copied in
+  # explicitly like this.
+  - from: build/icon.ico
+    to: icon.ico
 win:
   target:
     - target: nsis
