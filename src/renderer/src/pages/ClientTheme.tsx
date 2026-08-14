@@ -2,9 +2,24 @@ import { useEffect, useState } from 'react'
 import { Check, FolderOpen, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Toggle } from '@renderer/components/Toggle/Toggle'
 import { useSettings } from '@renderer/settings/SettingsContext'
+import type { ClientThemeApplyResult } from '../../../shared/client-theme-types'
 import themeStyles from './ClientTheme.module.css'
 import styles from './Page.module.css'
 import settingsStyles from './Settings.module.css'
+
+function describeApplyResult(result: ClientThemeApplyResult): string {
+  if (result.reloaded) return 'Saved — reloaded the League Client with the new theme.'
+  switch (result.reason) {
+    case 'hook-disabled':
+      return 'Saved — enable the client hook above for this to apply automatically. Otherwise it takes effect next restart.'
+    case 'not-connected':
+      return "Saved — takes effect next time the League Client (re)starts (it's not running right now)."
+    case 'unsafe-phase':
+      return "Saved — didn't reload automatically since you're mid-match or in champ select. Takes effect next restart."
+    case 'restart-failed':
+      return 'Saved, but the automatic reload failed. Takes effect next time the client (re)starts.'
+  }
+}
 
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp'
 
@@ -127,8 +142,8 @@ export function ClientTheme(): React.JSX.Element {
     setApplying(true)
     setApplyStatus(null)
     try {
-      await window.api.clientTheme.apply()
-      setApplyStatus('Saved — takes effect next time the League Client (re)starts.')
+      const result = await window.api.clientTheme.apply()
+      setApplyStatus(describeApplyResult(result))
     } catch (err) {
       setApplyStatus(err instanceof Error ? err.message : 'Failed to apply theme.')
     } finally {

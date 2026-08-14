@@ -21,6 +21,7 @@ import type { RankHistory } from '../shared/rank-history-types'
 import type { RuneBook, RuneBookPage } from '../shared/rune-book-types'
 import type { Settings } from '../shared/settings-types'
 import type { UpdaterState } from '../shared/updater-types'
+import type { ClientThemeApplyResult } from '../shared/client-theme-types'
 
 export interface LcuBridge {
   getSnapshot: () => Promise<LcuSnapshot>
@@ -65,7 +66,7 @@ export interface ThemeBridge {
 }
 
 export interface ClientThemeBridge {
-  apply: () => Promise<void>
+  apply: () => Promise<ClientThemeApplyResult>
   enable: () => Promise<void>
   disable: () => Promise<void>
   status: () => Promise<boolean>
