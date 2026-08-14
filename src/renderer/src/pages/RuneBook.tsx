@@ -8,6 +8,7 @@ import { AssetIcon } from '@renderer/components/AssetIcon/AssetIcon'
 import { ChampionPicker } from './rune-book/ChampionPicker'
 import { ImportDialog } from './rune-book/ImportDialog'
 import { PageList } from './rune-book/PageList'
+import { PullFromClientDialog } from './rune-book/PullFromClientDialog'
 import { RuneEditor } from './rune-book/RuneEditor'
 import pageStyles from './Page.module.css'
 import styles from './RuneBook.module.css'
@@ -23,6 +24,7 @@ export function RuneBook(): React.JSX.Element {
   const [selectedChampionId, setSelectedChampionId] = useState<number | null>(null)
   const [editorTarget, setEditorTarget] = useState<'new' | RuneBookPage | null>(null)
   const [importTarget, setImportTarget] = useState<RuneBookPage | null>(null)
+  const [pulling, setPulling] = useState(false)
 
   useEffect(() => {
     if (status !== 'online') {
@@ -158,6 +160,7 @@ export function RuneBook(): React.JSX.Element {
                 onDuplicate={handleDuplicate}
                 onDelete={handleDelete}
                 onImport={(page) => setImportTarget(page)}
+                onPullFromClient={() => setPulling(true)}
               />
             )}
           </div>
@@ -165,6 +168,14 @@ export function RuneBook(): React.JSX.Element {
       )}
 
       {importTarget ? <ImportDialog page={importTarget} onClose={() => setImportTarget(null)} /> : null}
+      {pulling && catalog ? (
+        <PullFromClientDialog
+          catalog={catalog}
+          champion={selectedChampion}
+          onPulled={setBook}
+          onClose={() => setPulling(false)}
+        />
+      ) : null}
     </div>
   )
 }
