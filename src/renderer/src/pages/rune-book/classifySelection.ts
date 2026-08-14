@@ -39,12 +39,17 @@ export function classifySelectedPerkIds(
   }
   if (subPerkIds.length !== 2) return null
 
-  const statShardIds = [
-    take(catalog.statShards.offense),
-    take(catalog.statShards.flex),
-    take(catalog.statShards.defense)
-  ]
-  if (statShardIds.some((id) => id === null)) return null
+  // Stat-shard rows share several perk ids across rows (Adaptive Force is a
+  // valid pick in both the offense and flex rows; Armor/Magic Resist in
+  // both flex and defense), so the same greedy take() used above can steal
+  // an id for the wrong row and leave a valid page unmatched. The LCU
+  // always returns selectedPerkIds in fixed slot order though, so the last
+  // three entries are the offense/flex/defense picks positionally — read
+  // them by position and just confirm each is legal for its row.
+  const shardIds = selectedPerkIds.slice(-3)
+  const shardRows = [catalog.statShards.offense, catalog.statShards.flex, catalog.statShards.defense]
+  const statShardIds = shardIds.map((id, i) => (shardRows[i].includes(id) ? id : null))
+  if (statShardIds.length !== 3 || statShardIds.some((id) => id === null)) return null
 
   return {
     keystoneId,
