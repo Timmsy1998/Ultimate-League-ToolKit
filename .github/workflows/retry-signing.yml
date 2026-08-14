@@ -42,6 +42,14 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      # The old tag's commit predates this script (or any future fix to
+      # it) — signing tooling isn't part of what got released, so it
+      # shouldn't be pinned to what existed back then. Restore just this
+      # one file from whatever ref this workflow itself is running from.
+      - name: Use current signing script
+        shell: bash
+        run: git show ${{ github.sha }}:scripts/sign-with-signpath.ps1 > scripts/sign-with-signpath.ps1
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -70,31 +78,27 @@ jobs:
       - name: Build installer (unsigned)
         run: npm run build:win
 
-      - name: Upload unsigned installer for signing
-        id: upload-unsigned-installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: unsigned-installer
-          path: release/*-setup.exe
-          retention-days: 1
-
-      - name: Submit to SignPath
-        uses: signpath/github-action-submit-signing-request@v2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
-          signing-policy-slug: ${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}
-          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'default' }}
-          github-artifact-id: ${{ steps.upload-unsigned-installer.outputs.artifact-id }}
-          wait-for-completion: true
-          output-artifact-directory: signed
-
-      - name: Restore signed installer and fix update manifest
-        shell: bash
+      # Calls SignPath's plain REST API directly (scripts/sign-with-signpath.ps1)
+      # instead of the signpath/github-action-submit-signing-request
+      # connector — see that script's header comment for why. shell: pwsh
+      # is required (not the default Windows PowerShell 5.1) for the
+      # -Form parameter the script uses.
+      - name: Sign installer via SignPath API
+        shell: pwsh
         run: |
-          cp signed/*-setup.exe release/
-          node scripts/fix-latest-yml.mjs
+          $unsigned = Get-ChildItem -Path release -Filter *-setup.exe | Select-Object -First 1
+          ./scripts/sign-with-signpath.ps1 `
+            -ApiToken '${{ secrets.SIGNPATH_API_TOKEN }}' `
+            -OrganizationId '${{ secrets.SIGNPATH_ORGANIZATION_ID }}' `
+            -ProjectSlug '${{ secrets.SIGNPATH_PROJECT_SLUG }}' `
+            -SigningPolicySlug '${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}' `
+            -ArtifactConfigurationSlug '${{ secrets.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'default' }}' `
+            -UnsignedFilePath $unsigned.FullName `
+            -OutputFilePath $unsigned.FullName
+
+      - name: Fix update manifest
+        shell: bash
+        run: node scripts/fix-latest-yml.mjs
 
       - name: Publish release assets
         shell: bash

@@ -96,34 +96,32 @@ jobs:
         if: steps.semrel.outputs.new_release_published == 'true'
         run: npm run build:win
 
-      - name: Upload unsigned installer for signing
+      # Calls SignPath's plain REST API directly (scripts/sign-with-signpath.ps1)
+      # instead of the signpath/github-action-submit-signing-request
+      # connector — that connector also requires a SignPath<->GitHub origin-
+      # verification trust link beyond just a valid API token, which this
+      # account's dashboard doesn't expose; see the script's header comment
+      # and retry-signing.yml, where this was proven to work first. shell:
+      # pwsh is required (not the default Windows PowerShell 5.1) for the
+      # -Form parameter the script uses.
+      - name: Sign installer via SignPath API
         if: steps.semrel.outputs.new_release_published == 'true'
-        id: upload-unsigned-installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: unsigned-installer
-          path: release/*-setup.exe
-          retention-days: 1
+        shell: pwsh
+        run: |
+          $unsigned = Get-ChildItem -Path release -Filter *-setup.exe | Select-Object -First 1
+          ./scripts/sign-with-signpath.ps1 `
+            -ApiToken '${{ secrets.SIGNPATH_API_TOKEN }}' `
+            -OrganizationId '${{ secrets.SIGNPATH_ORGANIZATION_ID }}' `
+            -ProjectSlug '${{ secrets.SIGNPATH_PROJECT_SLUG }}' `
+            -SigningPolicySlug '${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}' `
+            -ArtifactConfigurationSlug '${{ secrets.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'default' }}' `
+            -UnsignedFilePath $unsigned.FullName `
+            -OutputFilePath $unsigned.FullName
 
-      - name: Submit to SignPath
-        if: steps.semrel.outputs.new_release_published == 'true'
-        uses: signpath/github-action-submit-signing-request@v2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
-          signing-policy-slug: ${{ secrets.SIGNPATH_SIGNING_POLICY_SLUG }}
-          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG || 'default' }}
-          github-artifact-id: ${{ steps.upload-unsigned-installer.outputs.artifact-id }}
-          wait-for-completion: true
-          output-artifact-directory: signed
-
-      - name: Restore signed installer and fix update manifest
+      - name: Fix update manifest
         if: steps.semrel.outputs.new_release_published == 'true'
         shell: bash
-        run: |
-          cp signed/*-setup.exe release/
-          node scripts/fix-latest-yml.mjs
+        run: node scripts/fix-latest-yml.mjs
 
       - name: Publish release assets
         if: steps.semrel.outputs.new_release_published == 'true'
