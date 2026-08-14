@@ -78,7 +78,12 @@ export function buildToolsScript(baseUrl: string, token: string): string {
       button.style.cssText = 'cursor:pointer;';
       button.onclick = () => {
         if (!window.confirm('Dodging in champion select may cost LP and apply a queue-dodge penalty. Leave now?')) return;
-        api('/leave-lobby', { method: 'POST' }).catch(alertError);
+        // Leaving champ select on its own leaves the client showing stale
+        // gameflow state (still looks queued/in champ select) for a beat —
+        // reload right after so the client actually reflects having left.
+        api('/leave-lobby', { method: 'POST' })
+          .then(() => api('/restart-client', { method: 'POST' }))
+          .catch(alertError);
       };
 
       wrap.appendChild(button);
@@ -89,29 +94,91 @@ export function buildToolsScript(baseUrl: string, token: string): string {
   watchSelector('.bottom-right-buttons', insertDodgeButton);
 
   // ---- Invite friends ----
+  // A click opens a picker (group, or all online) rather than blind-inviting
+  // every online friend at once — nothing gets invited until a specific
+  // option in the panel is clicked, keeping this an explicit action same as
+  // everything else here.
+  function closeInvitePanel(wrap) {
+    const panel = wrap.querySelector('.ultk-invite-panel');
+    if (panel) panel.remove();
+    document.removeEventListener('mousedown', wrap.__ultkOnDocMouseDown, true);
+  }
+
+  function doInvite(wrap, friends, label) {
+    if (friends.length === 0) return;
+    if (!window.confirm('Invite ' + friends.length + ' friend(s) from "' + label + '" to this lobby?')) return;
+    api('/invite-friends', {
+      method: 'POST',
+      body: JSON.stringify({ summonerIds: friends.map((friend) => friend.summonerId) })
+    }).catch(alertError);
+    closeInvitePanel(wrap);
+  }
+
+  function buildInvitePanel(wrap, data) {
+    const online = (data.friends || []).filter((friend) => friend.availability !== 'offline');
+    if (online.length === 0) {
+      window.alert('ULTK: No online friends to invite.');
+      return;
+    }
+
+    const groupNameById = {};
+    (data.groups || []).forEach((group) => { groupNameById[group.id] = group.name; });
+
+    const byGroup = {};
+    online.forEach((friend) => {
+      const key = friend.groupId && groupNameById[friend.groupId] ? friend.groupId : '';
+      if (!byGroup[key]) byGroup[key] = [];
+      byGroup[key].push(friend);
+    });
+
+    const buckets = [{ label: 'All online friends', friends: online }];
+    Object.keys(byGroup).forEach((key) => {
+      buckets.push({ label: key ? groupNameById[key] : 'Ungrouped', friends: byGroup[key] });
+    });
+
+    const panel = document.createElement('div');
+    panel.className = 'ultk-invite-panel';
+    panel.style.cssText =
+      'position:absolute;top:100%;left:0;margin-top:4px;min-width:200px;background:#0a1428;border:1px solid #0ac8b9;border-radius:6px;padding:6px;z-index:1000;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
+
+    buckets.forEach((bucket) => {
+      const row = document.createElement('div');
+      row.textContent = bucket.label + ' (' + bucket.friends.length + ')';
+      row.style.cssText = 'padding:6px 8px;cursor:pointer;color:#f0f0f0;font-size:12px;border-radius:4px;';
+      row.onmouseenter = () => { row.style.background = 'rgba(10,200,185,0.18)'; };
+      row.onmouseleave = () => { row.style.background = 'transparent'; };
+      row.onclick = () => doInvite(wrap, bucket.friends, bucket.label);
+      panel.appendChild(row);
+    });
+
+    wrap.appendChild(panel);
+    wrap.__ultkOnDocMouseDown = (event) => {
+      if (!panel.contains(event.target)) closeInvitePanel(wrap);
+    };
+    document.addEventListener('mousedown', wrap.__ultkOnDocMouseDown, true);
+  }
+
   function insertInviteButton(container) {
-    if (document.querySelector('.ultk-invite-button')) return;
+    if (document.querySelector('.ultk-invite-wrap')) return;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'ultk-invite-wrap';
+    wrap.style.cssText = 'position:relative;display:inline-block;margin-right:10px;';
 
     const button = document.createElement('lol-uikit-flat-button');
-    button.className = 'ultk-invite-button';
     button.textContent = 'Invite Friends (ULTK)';
-    button.style.cssText = 'margin-right:10px;cursor:pointer;';
-    button.onclick = () => {
-      api('/friends').then((data) => {
-        const online = (data.friends || []).filter((friend) => friend.availability !== 'offline');
-        if (online.length === 0) {
-          window.alert('ULTK: No online friends to invite.');
-          return null;
-        }
-        if (!window.confirm('Invite ' + online.length + ' online friend(s) to this lobby?')) return null;
-        return api('/invite-friends', {
-          method: 'POST',
-          body: JSON.stringify({ summonerIds: online.map((friend) => friend.summonerId) })
-        });
-      }).catch(alertError);
+    button.style.cssText = 'cursor:pointer;';
+    button.onclick = (event) => {
+      event.stopPropagation();
+      if (wrap.querySelector('.ultk-invite-panel')) {
+        closeInvitePanel(wrap);
+        return;
+      }
+      api('/friends').then((data) => buildInvitePanel(wrap, data)).catch(alertError);
     };
 
-    container.insertBefore(button, container.firstChild);
+    wrap.appendChild(button);
+    container.insertBefore(wrap, container.firstChild);
   }
 
   watchSelector('.lobby-header-buttons-container', insertInviteButton);
@@ -127,7 +194,7 @@ export function buildToolsScript(baseUrl: string, token: string): string {
     const button = document.createElement('div');
     button.className = 'ultk-loot-button';
     button.title = 'Disenchant all duplicate/owned shards (ULTK)';
-    button.textContent = 'ULTK';
+    button.textContent = 'Loot Tools';
     button.style.cssText =
       'cursor:pointer;padding:4px 10px;margin-left:8px;border-radius:6px;background:rgba(10,200,185,0.18);border:1px solid #0ac8b9;color:#0ac8b9;font-weight:700;font-size:11px;';
 
