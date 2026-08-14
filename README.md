@@ -66,7 +66,7 @@ each action regardless of which UI triggered it.
 
 ## Getting started
 
-Requires [Node.js](https://nodejs.org/) 20 or newer.
+Requires [Node.js](https://nodejs.org/) 22 or newer (matches what CI runs).
 
 ```sh
 npm install

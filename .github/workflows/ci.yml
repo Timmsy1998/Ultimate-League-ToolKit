@@ -26,6 +26,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      # Electron's own binary download and electron-builder's NSIS/tooling
+      # download are separate, large, version-pinned downloads that npm's
+      # own cache (above) doesn't cover — see @electron/get's and
+      # app-builder-lib's cache-path logic. Without this, both get
+      # re-fetched from scratch on every single run.
+      - name: Cache Electron/electron-builder downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.LOCALAPPDATA }}\electron\Cache
+            ${{ env.LOCALAPPDATA }}\electron-builder\Cache
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
         run: npm ci
@@ -37,6 +51,21 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      # The pnpm store here backs build-pengu-core.mjs's install/build of
+      # the vendored PenguLoader plugins subproject — resolved via `pnpm
+      # store path` rather than hardcoded, since the exact location is
+      # version/config-dependent.
+      - name: Resolve pnpm store path
+        id: pnpm-store
+        shell: bash
+        run: echo "path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('native/vendor/pengu-loader/plugins/pnpm-lock.yaml') }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
