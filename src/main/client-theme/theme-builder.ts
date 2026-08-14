@@ -104,11 +104,28 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
     return (bannerEl && bannerEl.shadowRoot && bannerEl.shadowRoot.querySelector('.regalia-banner-asset-static-image')) || null;
   }
 
+  // The client's own JS re-renders these elements on various internal
+  // updates, which resets a plain property assignment back to default —
+  // freezing the property with a getter/setter that silently ignores
+  // further writes is how the reference plugin keeps a custom icon/banner
+  // from reverting after that happens.
+  function freezeProperty(object, property) {
+    const value = object[property];
+    try {
+      Object.defineProperty(object, property, {
+        configurable: false,
+        get: () => value,
+        set: () => {}
+      });
+    } catch (e) {}
+  }
+
   function applyIcon(element) {
     if (!ICON_URL || !isOwn(element)) return false;
     const icon = getRegaliaIcon(element);
     if (!icon) return false;
     icon.style.backgroundImage = 'url(' + JSON.stringify(ICON_URL) + ')';
+    freezeProperty(icon.style, 'backgroundImage');
     return true;
   }
 
@@ -117,6 +134,7 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
     const banner = getRegaliaBanner(element);
     if (!banner) return false;
     banner.src = BANNER_URL;
+    freezeProperty(banner, 'src');
     return true;
   }
 
