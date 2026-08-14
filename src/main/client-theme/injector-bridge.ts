@@ -1,9 +1,10 @@
 import { execFile, spawn } from 'node:child_process'
-import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import type { ClientThemePackage } from '../../shared/client-theme-types'
+import { readBackgroundAsset } from './asset-store'
 import { logLine } from './logger'
 
 // Vendored from PenguLoader (MIT license — see THIRD_PARTY_NOTICES.md),
@@ -70,11 +71,6 @@ function runElevatedReg(regArgs: string[]): Promise<void> {
   })
 }
 
-// Points LeagueClientUx.exe's launch at PenguLoader's bootstrap export —
-// Windows' Image File Execution Options "Debugger" mechanism runs this
-// instead of the real exe, which is how core.dll ends up loaded before the
-// client has finished starting. Confirmed against PenguLoader's own
-// loader/Main/IFEO.cs and the @6000 export name in core/res/module.def.
 async function coreDllExists(): Promise<boolean> {
   try {
     await stat(coreDllPath())
@@ -84,6 +80,11 @@ async function coreDllExists(): Promise<boolean> {
   }
 }
 
+// Points LeagueClientUx.exe's launch at PenguLoader's bootstrap export —
+// Windows' Image File Execution Options "Debugger" mechanism runs this
+// instead of the real exe, which is how core.dll ends up loaded before the
+// client has finished starting. Confirmed against PenguLoader's own
+// loader/Main/IFEO.cs and the @6000 export name in core/res/module.def.
 export async function enable(): Promise<void> {
   if (!(await coreDllExists())) {
     const message = `core.dll not found at ${coreDllPath()} — run the native build first`
@@ -122,6 +123,29 @@ export async function disable(): Promise<void> {
   }
 }
 
+// Copies (or clears) the active background file into the plugin's own
+// assets/ folder — PenguLoader only resolves asset URLs relative to the
+// plugin that references them, so the source-of-truth copy in userData
+// isn't reachable from the client's page directly. Only touches
+// background.* entries so a font asset written by a later apply (see the
+// custom-fonts feature) never gets clobbered.
+async function syncBackgroundAsset(filename: string | null): Promise<void> {
+  const assetsDestDir = path.join(pluginDir(), 'assets')
+  await mkdir(assetsDestDir, { recursive: true })
+
+  const existing = await readdir(assetsDestDir).catch(() => [] as string[])
+  await Promise.all(
+    existing
+      .filter((name) => name.startsWith('background.') && name !== filename)
+      .map((name) => rm(path.join(assetsDestDir, name), { force: true }))
+  )
+
+  if (filename) {
+    const bytes = await readBackgroundAsset(filename)
+    await writeFile(path.join(assetsDestDir, filename), bytes)
+  }
+}
+
 export async function applyTheme(pkg: ClientThemePackage): Promise<void> {
   const dir = pluginDir()
   await mkdir(dir, { recursive: true })
@@ -136,7 +160,8 @@ export async function applyTheme(pkg: ClientThemePackage): Promise<void> {
 
   try {
     await writeFile(path.join(dir, PLUGIN_ENTRY_FILE), parts.join('\n'), 'utf-8')
-    await logLine('applyTheme() wrote plugin', { dir })
+    await syncBackgroundAsset(pkg.backgroundAssetFilename)
+    await logLine('applyTheme() wrote plugin', { dir, backgroundAsset: pkg.backgroundAssetFilename })
   } catch (error) {
     await logLine('applyTheme() failed', error)
     throw error

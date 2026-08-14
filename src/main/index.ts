@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, session, shell } from 'electron'
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { removeBackgroundAsset, saveBackgroundAsset } from './client-theme/asset-store'
 import {
   applyTheme,
   disable as disableClientTheme,
@@ -207,6 +208,13 @@ function registerClientThemeBridge(): void {
     await ensureLogDirectory()
     shell.showItemInFolder(getLogFilePath())
   })
+  ipcMain.handle('client-theme:set-background-asset', (_event, bytes: unknown) => {
+    if (!(bytes instanceof ArrayBuffer)) {
+      return Promise.reject(new Error('Invalid file data'))
+    }
+    return saveBackgroundAsset(Buffer.from(bytes))
+  })
+  ipcMain.handle('client-theme:clear-background-asset', () => removeBackgroundAsset())
 }
 
 function registerRuneBookBridge(): void {

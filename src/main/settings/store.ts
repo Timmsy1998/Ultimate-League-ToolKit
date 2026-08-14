@@ -28,6 +28,18 @@ function isNullableDataUri(value: unknown): boolean {
   return typeof value === 'string' && value.length <= MAX_DATA_URI_LENGTH && DATA_IMAGE_URI_PATTERN.test(value)
 }
 
+// Backgrounds are either a legacy data URI (old settings, images only) or
+// a filename the client-theme asset store generated itself — never
+// anything else, since that value later gets embedded as a plugin asset
+// reference. See src/main/client-theme/asset-store.ts.
+const BACKGROUND_ASSET_PATTERN = /^background\.(png|jpg|webp|gif|mp4|webm)$/
+
+function isNullableBackgroundValue(value: unknown): boolean {
+  if (value === null) return true
+  if (typeof value !== 'string') return false
+  return isNullableDataUri(value) || BACKGROUND_ASSET_PATTERN.test(value)
+}
+
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 
 function isNullableHexColor(value: unknown): boolean {
@@ -50,7 +62,8 @@ function isPartialSettings(value: unknown): value is Partial<Settings> {
   if ('dodgeToolEnabled' in v && typeof v.dodgeToolEnabled !== 'boolean') return false
   if ('lootHelperEnabled' in v && typeof v.lootHelperEnabled !== 'boolean') return false
   if ('clientThemeEnabled' in v && typeof v.clientThemeEnabled !== 'boolean') return false
-  if ('clientThemeBackground' in v && !isNullableDataUri(v.clientThemeBackground)) return false
+  if ('clientThemeBackground' in v && !isNullableBackgroundValue(v.clientThemeBackground)) return false
+  if ('clientThemeReducedMotion' in v && typeof v.clientThemeReducedMotion !== 'boolean') return false
   if ('clientThemeAccentColor' in v && !isNullableHexColor(v.clientThemeAccentColor)) return false
   if ('clientThemeFont' in v && !isNullableFontName(v.clientThemeFont)) return false
   if ('clientThemeBannerImage' in v && !isNullableDataUri(v.clientThemeBannerImage)) return false

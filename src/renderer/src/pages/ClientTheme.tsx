@@ -22,6 +22,22 @@ function describeApplyResult(result: ClientThemeApplyResult): string {
 }
 
 const IMAGE_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp'
+const BACKGROUND_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm'
+
+function clientSideSizeLimit(mimeType: string): number {
+  if (mimeType === 'image/gif') return 25 * 1024 * 1024
+  if (mimeType === 'video/mp4' || mimeType === 'video/webm') return 100 * 1024 * 1024
+  return 8 * 1024 * 1024
+}
+
+function describeBackgroundValue(value: string | null): string {
+  if (!value) return 'Using the client default.'
+  if (value.startsWith('data:')) return 'Custom background set.'
+  const ext = value.split('.').pop()
+  if (ext === 'mp4' || ext === 'webm') return 'Custom video background set.'
+  if (ext === 'gif') return 'Custom GIF background set.'
+  return 'Custom background set.'
+}
 
 const FONT_PRESETS = [
   { label: 'Client default', value: null },
@@ -29,7 +45,7 @@ const FONT_PRESETS = [
   { label: 'IBM Plex Mono', value: '"IBM Plex Mono", monospace' }
 ] as const
 
-type ImageField = 'clientThemeBackground' | 'clientThemeBannerImage' | 'clientThemeIconImage'
+type ImageField = 'clientThemeBannerImage' | 'clientThemeIconImage'
 
 function readImageAsDataUri(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,11 +60,21 @@ interface ImagePickerRowProps {
   title: string
   description: string
   value: string | null
+  accept?: string
+  buttonLabel?: string
   onPick: (file: File) => void
   onClear: () => void
 }
 
-function ImagePickerRow({ title, description, value, onPick, onClear }: ImagePickerRowProps): React.JSX.Element {
+function ImagePickerRow({
+  title,
+  description,
+  value,
+  accept = IMAGE_ACCEPT,
+  buttonLabel = 'Choose image',
+  onPick,
+  onClear
+}: ImagePickerRowProps): React.JSX.Element {
   return (
     <div className={settingsStyles.row}>
       <div>
@@ -57,10 +83,10 @@ function ImagePickerRow({ title, description, value, onPick, onClear }: ImagePic
       </div>
       <div className={themeStyles.actions}>
         <label className={`${settingsStyles.updateButton} ${themeStyles.fileButton}`}>
-          Choose image
+          {buttonLabel}
           <input
             type="file"
-            accept={IMAGE_ACCEPT}
+            accept={accept}
             className={themeStyles.fileInput}
             onChange={(e) => {
               const file = e.target.files?.[0]
@@ -87,6 +113,7 @@ export function ClientTheme(): React.JSX.Element {
   const [applying, setApplying] = useState(false)
   const [logLines, setLogLines] = useState<string[]>([])
   const [logLoading, setLogLoading] = useState(false)
+  const [backgroundStatus, setBackgroundStatus] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -115,6 +142,28 @@ export function ClientTheme(): React.JSX.Element {
   async function pickImage(field: ImageField, file: File): Promise<void> {
     const dataUri = await readImageAsDataUri(file)
     updateSettings({ [field]: dataUri })
+  }
+
+  async function pickBackground(file: File): Promise<void> {
+    setBackgroundStatus(null)
+    const limit = clientSideSizeLimit(file.type)
+    if (file.size > limit) {
+      setBackgroundStatus(`That file is too large (max ${Math.round(limit / (1024 * 1024))} MB for this type).`)
+      return
+    }
+    try {
+      const bytes = await file.arrayBuffer()
+      const filename = await window.api.clientTheme.setBackgroundAsset(bytes)
+      updateSettings({ clientThemeBackground: filename })
+    } catch (err) {
+      setBackgroundStatus(err instanceof Error ? err.message : 'Failed to set background.')
+    }
+  }
+
+  async function clearBackground(): Promise<void> {
+    setBackgroundStatus(null)
+    await window.api.clientTheme.clearBackgroundAsset()
+    updateSettings({ clientThemeBackground: null })
   }
 
   async function toggleInjector(enable: boolean): Promise<void> {
@@ -253,11 +302,28 @@ export function ClientTheme(): React.JSX.Element {
         <div className={settingsStyles.panel}>
           <ImagePickerRow
             title="Background"
-            description={settings.clientThemeBackground ? 'Custom background set.' : 'Using the client default.'}
+            description={backgroundStatus ?? describeBackgroundValue(settings.clientThemeBackground)}
             value={settings.clientThemeBackground}
-            onPick={(file) => void pickImage('clientThemeBackground', file)}
-            onClear={() => updateSettings({ clientThemeBackground: null })}
+            accept={BACKGROUND_ACCEPT}
+            buttonLabel="Choose image, GIF, or video"
+            onPick={(file) => void pickBackground(file)}
+            onClear={() => void clearBackground()}
           />
+          <div className={settingsStyles.divider} />
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Reduced motion</p>
+              <p className={settingsStyles.rowDescription}>
+                Skips playing video and GIF backgrounds — lighter on CPU/GPU. Worth turning on for older or laptop
+                hardware.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.clientThemeReducedMotion}
+              onChange={(checked) => updateSettings({ clientThemeReducedMotion: checked })}
+              label="Reduced motion"
+            />
+          </div>
           <div className={settingsStyles.divider} />
           <div className={settingsStyles.row}>
             <div>
