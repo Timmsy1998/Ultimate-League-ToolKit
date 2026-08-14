@@ -54,6 +54,13 @@ function describeFontAsset(value: string | null): string {
 
 type ImageField = 'clientThemeBannerImage' | 'clientThemeIconImage'
 
+// Matches MAX_IMAGE_BYTES in asset-store.ts / MAX_DATA_URI_LENGTH in
+// settings/store.ts — checked here too so an oversized banner/icon fails
+// fast with a message instead of silently getting dropped by the settings
+// write's own validation (which has no way to report back through
+// SettingsContext's optimistic update).
+const MAX_PROFILE_IMAGE_BYTES = 8 * 1024 * 1024
+
 function readImageAsDataUri(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -122,6 +129,7 @@ export function ClientTheme(): React.JSX.Element {
   const [logLoading, setLogLoading] = useState(false)
   const [backgroundStatus, setBackgroundStatus] = useState<string | null>(null)
   const [fontStatus, setFontStatus] = useState<string | null>(null)
+  const [imageStatus, setImageStatus] = useState<Partial<Record<ImageField, string>>>({})
 
   useEffect(() => {
     let cancelled = false
@@ -148,6 +156,12 @@ export function ClientTheme(): React.JSX.Element {
   }
 
   async function pickImage(field: ImageField, file: File): Promise<void> {
+    setImageStatus((prev) => ({ ...prev, [field]: undefined }))
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+      const limitMb = Math.round(MAX_PROFILE_IMAGE_BYTES / (1024 * 1024))
+      setImageStatus((prev) => ({ ...prev, [field]: `That file is too large (max ${limitMb} MB).` }))
+      return
+    }
     const dataUri = await readImageAsDataUri(file)
     updateSettings({ [field]: dataUri })
   }
@@ -425,18 +439,30 @@ export function ClientTheme(): React.JSX.Element {
         <div className={settingsStyles.panel}>
           <ImagePickerRow
             title="Profile banner"
-            description={settings.clientThemeBannerImage ? 'Custom banner set.' : 'Using your client banner.'}
+            description={
+              imageStatus.clientThemeBannerImage ??
+              (settings.clientThemeBannerImage ? 'Custom banner set.' : 'Using your client banner.')
+            }
             value={settings.clientThemeBannerImage}
             onPick={(file) => void pickImage('clientThemeBannerImage', file)}
-            onClear={() => updateSettings({ clientThemeBannerImage: null })}
+            onClear={() => {
+              setImageStatus((prev) => ({ ...prev, clientThemeBannerImage: undefined }))
+              updateSettings({ clientThemeBannerImage: null })
+            }}
           />
           <div className={settingsStyles.divider} />
           <ImagePickerRow
             title="Profile icon"
-            description={settings.clientThemeIconImage ? 'Custom icon set.' : 'Using your client icon.'}
+            description={
+              imageStatus.clientThemeIconImage ??
+              (settings.clientThemeIconImage ? 'Custom icon set.' : 'Using your client icon.')
+            }
             value={settings.clientThemeIconImage}
             onPick={(file) => void pickImage('clientThemeIconImage', file)}
-            onClear={() => updateSettings({ clientThemeIconImage: null })}
+            onClear={() => {
+              setImageStatus((prev) => ({ ...prev, clientThemeIconImage: undefined }))
+              updateSettings({ clientThemeIconImage: null })
+            }}
           />
         </div>
       </section>
@@ -475,7 +501,7 @@ export function ClientTheme(): React.JSX.Element {
               type="button"
               className={settingsStyles.updateButton}
               onClick={() => void applyToClient()}
-              disabled={applying || !settings.clientThemeEnabled}
+              disabled={applying || (!settings.clientThemeEnabled && !settings.injectedToolsEnabled)}
             >
               {applying ? (
                 <RefreshCw size={14} strokeWidth={1.75} className={settingsStyles.spin} aria-hidden="true" />
