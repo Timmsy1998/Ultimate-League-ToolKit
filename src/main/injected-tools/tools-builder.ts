@@ -60,6 +60,15 @@ export function buildToolsScript(baseUrl: string, token: string): string {
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  // Pengu runs this plugin file before the client's own <body> exists yet
+  // (confirmed live: observer.observe(document.body, ...) above threw "not
+  // of type Node" at load, aborting the whole script before any watcher
+  // below ever got set up) — defer starting each watcher until it does.
+  function whenBodyReady(fn) {
+    if (document.body) fn();
+    else document.addEventListener('DOMContentLoaded', fn, { once: true });
+  }
+
   // ---- Dodge ----
   // .bottom-right-buttons also appears outside champ select, so this
   // checks the live phase (one bridge call, not a poll) before inserting
@@ -91,7 +100,7 @@ export function buildToolsScript(baseUrl: string, token: string): string {
     }).catch(() => {});
   }
 
-  watchSelector('.bottom-right-buttons', insertDodgeButton);
+  whenBodyReady(() => watchSelector('.bottom-right-buttons', insertDodgeButton));
 
   // ---- Invite friends ----
   // A click opens a picker (group, or all online) rather than blind-inviting
@@ -181,7 +190,7 @@ export function buildToolsScript(baseUrl: string, token: string): string {
     container.insertBefore(wrap, container.firstChild);
   }
 
-  watchSelector('.lobby-header-buttons-container', insertInviteButton);
+  whenBodyReady(() => watchSelector('.lobby-header-buttons-container', insertInviteButton));
 
   // ---- Loot helper ----
   function insertLootButton(container) {
@@ -231,7 +240,7 @@ export function buildToolsScript(baseUrl: string, token: string): string {
     container.appendChild(wrap);
   }
 
-  watchSelector('.loot-display-category-tabs-container', insertLootButton);
+  whenBodyReady(() => watchSelector('.loot-display-category-tabs-container', insertLootButton));
 })();`
 }
 
