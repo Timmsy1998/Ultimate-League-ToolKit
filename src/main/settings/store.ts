@@ -5,10 +5,14 @@ import { DEFAULT_SETTINGS, type Settings } from '../../shared/settings-types'
 
 const WRITE_DEBOUNCE_MS = 250
 
-// Generous enough for a reasonably-sized background/banner/icon image as a
-// data URI, but bounded so a renderer bug (or bad actor with IPC access)
-// can't grow settings.json without limit.
-const MAX_DATA_URI_LENGTH = 2_000_000
+// Banner/icon images stay as data URIs (unlike background/font, which are
+// file-based via the asset store) since they get embedded directly as a JS
+// string literal in the generated plugin file — no separate asset copy
+// needed. Sized for parity with the 8MB background-image cap in
+// asset-store.ts (base64 inflates ~4/3, so 8MB binary needs ~10.7M chars);
+// bounded so a renderer bug (or bad actor with IPC access) can't grow
+// settings.json without limit.
+const MAX_DATA_URI_LENGTH = 12_000_000
 
 let cached: Settings | null = null
 let writeTimer: NodeJS.Timeout | null = null

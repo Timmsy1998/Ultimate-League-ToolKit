@@ -51,6 +51,136 @@ function customFontRule(filename: string): string {
   return `@font-face { font-family: '${CUSTOM_FONT_FAMILY}'; src: ${src}; }\n* { font-family: '${CUSTOM_FONT_FAMILY}' !important; }`
 }
 
+// The profile icon and banner both live several shadow-DOM boundaries deep
+// inside web components (lol-regalia-*-v2-element), created dynamically as
+// the user navigates — a flat document.querySelectorAll() never reaches
+// them and a one-shot script misses elements that mount later. This
+// structure (element/shadowRoot chain, class names, watch-and-retry
+// pattern) is grounded in a real, working PenguLoader theme plugin
+// (github.com/Elaina69/Elaina-theme, MIT), not guessed — see
+// customUI/customIcon.ts's CustomAvatar/CustomBanner classes there. Scoped
+// down from that reference to just the local user's own summoner (matched
+// by summoner-id/puuid) since we're only reskinning what the local user
+// sees of themselves, never touching how anyone else's icon/banner render.
+function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string | null): string {
+  if (!bannerDataUri && !iconDataUri) return ''
+  return `(() => {
+  const BANNER_URL = ${JSON.stringify(bannerDataUri)};
+  const ICON_URL = ${JSON.stringify(iconDataUri)};
+  let ownSummonerId = null;
+  let ownPuuid = null;
+
+  fetch('/lol-summoner/v1/current-summoner').then((res) => res.json()).then((data) => {
+    ownSummonerId = data && typeof data.summonerId === 'number' ? data.summonerId : null;
+    ownPuuid = data && typeof data.puuid === 'string' ? data.puuid : null;
+  }).catch(() => {});
+
+  function isOwn(element) {
+    const sid = element.getAttribute('summoner-id');
+    if (sid !== null && ownSummonerId !== null && Number(sid) === ownSummonerId) return true;
+    const puuid = element.getAttribute('puuid') || element.getAttribute('voice-puuid');
+    if (puuid && ownPuuid && puuid === ownPuuid) return true;
+    return false;
+  }
+
+  function getRegaliaIcon(element) {
+    const direct = element.shadowRoot && element.shadowRoot.querySelector('.lol-regalia-summoner-icon');
+    if (direct) return direct;
+    const crest = element.shadowRoot && element.shadowRoot.querySelector('lol-regalia-crest-v2-element');
+    return (crest && crest.shadowRoot && crest.shadowRoot.querySelector('.lol-regalia-summoner-icon')) || null;
+  }
+
+  function getRegaliaBanner(element) {
+    const bannerEl = element.shadowRoot && element.shadowRoot.querySelector('lol-regalia-banner-v2-element');
+    return (bannerEl && bannerEl.shadowRoot && bannerEl.shadowRoot.querySelector('.regalia-banner-asset-static-image')) || null;
+  }
+
+  function applyIcon(element) {
+    if (!ICON_URL || !isOwn(element)) return false;
+    const icon = getRegaliaIcon(element);
+    if (!icon) return false;
+    icon.style.backgroundImage = 'url(' + JSON.stringify(ICON_URL) + ')';
+    return true;
+  }
+
+  function applyBanner(element) {
+    if (!BANNER_URL || !isOwn(element)) return false;
+    const banner = getRegaliaBanner(element);
+    if (!banner) return false;
+    banner.src = BANNER_URL;
+    return true;
+  }
+
+  function applyBoth(element) {
+    const didIcon = applyIcon(element);
+    const didBanner = applyBanner(element);
+    return didIcon || didBanner;
+  }
+
+  // Shadow roots fill in asynchronously as the component finishes
+  // rendering, so a single attempt right at creation often finds nothing
+  // yet — retry on mutation for a few seconds, then give up.
+  function watch(element) {
+    let attempts = 0;
+    const startedAt = Date.now();
+    let debounceTimer = null;
+    let stopped = false;
+
+    const stop = () => {
+      stopped = true;
+      if (debounceTimer !== null) clearTimeout(debounceTimer);
+      observer.disconnect();
+    };
+
+    const tryApply = () => {
+      if (stopped || !element.isConnected) {
+        stop();
+        return;
+      }
+      attempts++;
+      const applied = applyBoth(element);
+      if (applied || Date.now() - startedAt >= 4000 || attempts >= 20) stop();
+    };
+
+    const observer = new MutationObserver(() => {
+      if (stopped) return;
+      if (debounceTimer !== null) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(tryApply, 50);
+    });
+    observer.observe(element, { attributes: true, childList: true, subtree: true });
+    tryApply();
+  }
+
+  const REGALIA_SELECTORS = [
+    'lol-regalia-hovercard-v2-element',
+    'lol-regalia-identity-customizer-element',
+    'lol-regalia-parties-v2-element',
+    'lol-regalia-profile-v2-element'
+  ];
+
+  function watchWithin(root) {
+    REGALIA_SELECTORS.forEach((selector) => {
+      root.querySelectorAll(selector).forEach(watch);
+    });
+  }
+
+  watchWithin(document);
+
+  const rootObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (!(node instanceof Element)) return;
+        REGALIA_SELECTORS.forEach((selector) => {
+          if (node.matches(selector)) watch(node);
+        });
+        watchWithin(node);
+      });
+    });
+  });
+  rootObserver.observe(document.body, { childList: true, subtree: true });
+})();`
+}
+
 // Muted/no-controls/no-PiP per the user's "nobody wants audio" ask, plus a
 // visibilitychange pause — the concrete form of CLAUDE.md §4's "no feature
 // may assume a high-resource machine" for anything this visually heavy.
@@ -110,25 +240,9 @@ export function buildThemePackage(settings: Settings): ClientThemePackage {
     cssRules.push(`* { font-family: ${settings.clientThemeFont} !important; }`)
   }
 
-  // Best-effort per the user's own read of the live client: the banner is a
-  // CSS background-image (not an <img>) on ".hover-card-header", part of the
-  // rcp-fe-lol-hover-card plugin — not confirmed against a full DOM dump the
-  // way the profile icon selector below was, so re-check in-client if this
-  // doesn't take.
-  if (settings.clientThemeEnabled && settings.clientThemeBannerImage) {
-    jsStatements.push(
-      `document.querySelectorAll('.hover-card-header').forEach((el) => { el.style.setProperty('background-image', 'url(' + ${JSON.stringify(settings.clientThemeBannerImage)} + ')', 'important') })`
-    )
-  }
-
-  // Confirmed against a live client's DOM: the icon lives inside a
-  // <lol-uikit-radial-progress class="summoner-level-icon"> web component,
-  // as <img class="icon-image ...">, not the ".lol-profile-summoner-icon"
-  // placeholder this used to target.
-  if (settings.clientThemeEnabled && settings.clientThemeIconImage) {
-    jsStatements.push(
-      `document.querySelectorAll('lol-uikit-radial-progress.summoner-level-icon img.icon-image').forEach((img) => { img.src = ${JSON.stringify(settings.clientThemeIconImage)} })`
-    )
+  if (settings.clientThemeEnabled && (settings.clientThemeBannerImage || settings.clientThemeIconImage)) {
+    const script = regaliaProfileScript(settings.clientThemeBannerImage, settings.clientThemeIconImage)
+    if (script) jsStatements.push(script)
   }
 
   return { css: cssRules.join('\n'), js: jsStatements.join('\n'), backgroundAssetFilename, fontAssetFilename }
