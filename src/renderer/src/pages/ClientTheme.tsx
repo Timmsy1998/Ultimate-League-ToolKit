@@ -26,7 +26,7 @@ const BACKGROUND_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,video/mp4,v
 
 function clientSideSizeLimit(mimeType: string): number {
   if (mimeType === 'image/gif') return 25 * 1024 * 1024
-  if (mimeType === 'video/mp4' || mimeType === 'video/webm') return 100 * 1024 * 1024
+  if (mimeType === 'video/mp4' || mimeType === 'video/webm') return 250 * 1024 * 1024
   return 8 * 1024 * 1024
 }
 

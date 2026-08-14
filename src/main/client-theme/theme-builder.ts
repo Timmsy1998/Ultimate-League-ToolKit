@@ -110,15 +110,24 @@ export function buildThemePackage(settings: Settings): ClientThemePackage {
     cssRules.push(`* { font-family: ${settings.clientThemeFont} !important; }`)
   }
 
+  // Best-effort per the user's own read of the live client: the banner is a
+  // CSS background-image (not an <img>) on ".hover-card-header", part of the
+  // rcp-fe-lol-hover-card plugin — not confirmed against a full DOM dump the
+  // way the profile icon selector below was, so re-check in-client if this
+  // doesn't take.
   if (settings.clientThemeEnabled && settings.clientThemeBannerImage) {
     jsStatements.push(
-      `document.querySelectorAll('.lol-regalia-banner img').forEach((img) => { img.src = ${JSON.stringify(settings.clientThemeBannerImage)} })`
+      `document.querySelectorAll('.hover-card-header').forEach((el) => { el.style.setProperty('background-image', 'url(' + ${JSON.stringify(settings.clientThemeBannerImage)} + ')', 'important') })`
     )
   }
 
+  // Confirmed against a live client's DOM: the icon lives inside a
+  // <lol-uikit-radial-progress class="summoner-level-icon"> web component,
+  // as <img class="icon-image ...">, not the ".lol-profile-summoner-icon"
+  // placeholder this used to target.
   if (settings.clientThemeEnabled && settings.clientThemeIconImage) {
     jsStatements.push(
-      `document.querySelectorAll('.lol-profile-summoner-icon img').forEach((img) => { img.src = ${JSON.stringify(settings.clientThemeIconImage)} })`
+      `document.querySelectorAll('lol-uikit-radial-progress.summoner-level-icon img.icon-image').forEach((img) => { img.src = ${JSON.stringify(settings.clientThemeIconImage)} })`
     )
   }
 
