@@ -184,7 +184,7 @@ export class LcuConnectionManager extends EventEmitter {
     if (!this.client) {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
-    await leaveLobby(this.client)
+    await leaveLobby(this.client, this.phase)
   }
 
   async restartClientUx(): Promise<void> {
