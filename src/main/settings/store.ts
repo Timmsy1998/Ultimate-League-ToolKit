@@ -78,6 +78,7 @@ function isPartialSettings(value: unknown): value is Partial<Settings> {
   if ('clientThemeBannerImage' in v && !isNullableDataUri(v.clientThemeBannerImage)) return false
   if ('clientThemeIconImage' in v && !isNullableDataUri(v.clientThemeIconImage)) return false
   if ('inviteFriendsEnabled' in v && typeof v.inviteFriendsEnabled !== 'boolean') return false
+  if ('injectedToolsEnabled' in v && typeof v.injectedToolsEnabled !== 'boolean') return false
   return true
 }
 
