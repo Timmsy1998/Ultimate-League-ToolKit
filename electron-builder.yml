@@ -13,6 +13,13 @@ files:
 extraResources:
   - from: resources/pengu-core
     to: pengu-core
+  # Read at runtime for the system tray icon (see trayIconPath() in
+  # src/main/index.ts) — build/ itself is only a build-time asset source
+  # (buildResources above), not part of the app's own bundled files list,
+  # so the one icon the running app needs from it has to be copied in
+  # explicitly like this.
+  - from: build/icon.ico
+    to: icon.ico
 win:
   target:
     - target: nsis
