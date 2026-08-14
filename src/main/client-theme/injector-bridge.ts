@@ -56,7 +56,13 @@ function pluginDir(): string {
 function runElevatedReg(regArgs: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const argList = regArgs.map((arg) => `'${arg.replace(/'/g, "''")}'`).join(',')
-    const psCommand = `Start-Process -FilePath 'reg.exe' -ArgumentList ${argList} -Verb RunAs -Wait -WindowStyle Hidden`
+    // -PassThru is required to get reg.exe's own exit code back. Without
+    // it, `Start-Process -Wait` only reports whether *launching* the
+    // elevated process succeeded — if reg.exe itself then failed (or
+    // returned non-zero for any reason short of the UAC prompt being
+    // cancelled outright), the outer powershell.exe still exits 0 and
+    // this looked like success even though nothing was written.
+    const psCommand = `$p = Start-Process -FilePath 'reg.exe' -ArgumentList ${argList} -Verb RunAs -Wait -WindowStyle Hidden -PassThru; exit $p.ExitCode`
     const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', psCommand], {
       windowsHide: true
     })
@@ -95,6 +101,11 @@ export async function enable(): Promise<void> {
   const debuggerValue = `rundll32 "${coreDllPath()}",#6000`
   try {
     await runElevatedReg(['add', IFEO_VALUE_PATH, '/v', 'Debugger', '/t', 'REG_SZ', '/d', debuggerValue, '/f'])
+    // Belt-and-braces beyond the exit-code fix above: read the value back
+    // for real rather than trusting the write reported success.
+    if (!(await isEnabled())) {
+      throw new Error('The registry update did not take effect — try again, or check that UAC was approved.')
+    }
     await logLine('enable() succeeded', { coreDllPath: coreDllPath() })
   } catch (error) {
     await logLine('enable() failed', error)
@@ -115,12 +126,19 @@ export function isEnabled(): Promise<boolean> {
 export async function disable(): Promise<void> {
   try {
     await runElevatedReg(['delete', IFEO_VALUE_PATH, '/f'])
-    await logLine('disable() succeeded')
   } catch (error) {
     // Deleting a value that's already gone isn't a real failure — the end
-    // state disable() promises (no Debugger override) already holds.
+    // state disable() promises (no Debugger override) already holds, as
+    // long as the verification below actually confirms that.
     await logLine('disable() reg delete errored (likely already absent)', error)
   }
+
+  if (await isEnabled()) {
+    const error = new Error('The registry update did not take effect — try again, or check that UAC was approved.')
+    await logLine('disable() failed', error)
+    throw error
+  }
+  await logLine('disable() succeeded')
 }
 
 // Copies (or clears) an active asset file into the plugin's own assets/
