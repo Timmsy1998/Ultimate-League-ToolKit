@@ -12,7 +12,7 @@ import { leaveLobby } from './lobby'
 import { craftDisenchant, fetchLoot } from './loot'
 import { fetchRankedStats } from './ranked'
 import { restartClientUx } from './riot-client'
-import { fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
+import { fetchRunePageDetails, fetchRunePages, fetchPerkCatalog, importRunePage } from './rune-pages'
 import { fetchMatchHistory } from './match-history'
 import * as rankHistoryStore from '../rank-history/store'
 import type {
@@ -31,6 +31,7 @@ import type {
   PerkCatalog,
   RankedEntry,
   RankedStats,
+  RunePageDetail,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
@@ -111,6 +112,13 @@ export class LcuConnectionManager extends EventEmitter {
       return Promise.reject(new Error('Not connected to the League Client'))
     }
     return fetchRunePages(this.client)
+  }
+
+  getRunePageDetails(): Promise<RunePageDetail[]> {
+    if (!this.client) {
+      return Promise.reject(new Error('Not connected to the League Client'))
+    }
+    return fetchRunePageDetails(this.client)
   }
 
   getMatchHistory(count = 10): Promise<MatchSummary[]> {

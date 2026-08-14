@@ -140,6 +140,7 @@ function registerLcuBridge(): void {
 
   ipcMain.handle('lcu:get-snapshot', () => lcuManager.getSnapshot())
   ipcMain.handle('lcu:get-rune-pages', () => lcuManager.getRunePages())
+  ipcMain.handle('lcu:get-rune-page-details', () => lcuManager.getRunePageDetails())
   ipcMain.handle('lcu:get-match-history', () => lcuManager.getMatchHistory())
   ipcMain.handle('lcu:get-perk-catalog', () => lcuManager.getPerkCatalog())
   ipcMain.handle('lcu:get-champions', () => lcuManager.getChampions())

@@ -13,6 +13,7 @@ import type {
   LootSummary,
   PerkCatalog,
   RankedStats,
+  RunePageDetail,
   RunePageSummary,
   MatchSummary,
   SummonerInfo
@@ -33,6 +34,7 @@ export interface LcuBridge {
   onRanked: (cb: (ranked: RankedStats | null) => void) => () => void
   onGameSession: (cb: (session: GameSessionInfo | null) => void) => () => void
   getRunePages: () => Promise<RunePageSummary[]>
+  getRunePageDetails: () => Promise<RunePageDetail[]>
   getMatchHistory: () => Promise<MatchSummary[]>
   getPerkCatalog: () => Promise<PerkCatalog>
   getChampions: () => Promise<ChampionSummary[]>
