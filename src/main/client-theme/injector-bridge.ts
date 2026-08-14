@@ -185,6 +185,34 @@ export async function disable(): Promise<void> {
   await logLine('disable() succeeded')
 }
 
+// A background video/gif still playing in the running client holds an
+// open file handle on Windows, which turns a plain rm() of the old asset
+// into an EBUSY that aborted the whole apply — confirmed live, not
+// theoretical (swapping away from an active background.webm threw this).
+// The old file is inert either way (nothing in the freshly-written CSS/JS
+// still references it), so a lock just means it'll get swept up on a
+// later apply once the client releases the handle — not worth failing the
+// user's actual request (switching to the new background) over.
+async function safeUnlink(filePath: string): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await rm(filePath, { force: true })
+      return
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      if (code !== 'EBUSY' && code !== 'EPERM') throw error
+      if (attempt === 2) {
+        await logLine('safeUnlink: asset locked by running client, leaving stale file in place', {
+          filePath,
+          error
+        })
+        return
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    }
+  }
+}
+
 // Copies (or clears) an active asset file into the plugin's own assets/
 // folder — PenguLoader only resolves asset URLs relative to the plugin
 // that references them, so the source-of-truth copy in userData isn't
@@ -201,9 +229,7 @@ async function syncAsset(
 
   const existing = await readdir(assetsDestDir).catch(() => [] as string[])
   await Promise.all(
-    existing
-      .filter((name) => name.startsWith(prefix) && name !== filename)
-      .map((name) => rm(path.join(assetsDestDir, name), { force: true }))
+    existing.filter((name) => name.startsWith(prefix) && name !== filename).map((name) => safeUnlink(path.join(assetsDestDir, name)))
   )
 
   if (filename) {

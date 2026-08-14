@@ -19,6 +19,13 @@ interface RawFriendGroup {
 // string here used to drop every ungrouped friend from the list entirely,
 // which for most accounts meant nearly all of them — showing "no friends
 // online" even with friends actually online.
+// The LCU's own schema (LolChatFriendResource/LolChatGroupResource) has
+// both groupId and the group's id as a JSON *number* (int32), never a
+// string — confirmed against the community-maintained LCU OpenAPI schema
+// (github.com/MingweiSamuel/lcu-schema), not guessed. The old strict
+// typeof === 'string' checks here rejected every real value, which is why
+// fetchFriendGroups() always came back empty and every friend fell into
+// "Ungrouped" regardless of their actual custom groups.
 function toFriendSummary(raw: unknown): FriendSummary | null {
   if (!raw || typeof raw !== 'object') return null
   const v = raw as RawFriend
@@ -28,7 +35,7 @@ function toFriendSummary(raw: unknown): FriendSummary | null {
   return {
     summonerId: v.summonerId,
     name: v.name,
-    groupId: typeof v.groupId === 'string' ? v.groupId : '',
+    groupId: typeof v.groupId === 'number' ? String(v.groupId) : typeof v.groupId === 'string' ? v.groupId : '',
     availability: v.availability
   }
 }
@@ -36,8 +43,9 @@ function toFriendSummary(raw: unknown): FriendSummary | null {
 function toFriendGroup(raw: unknown): FriendGroup | null {
   if (!raw || typeof raw !== 'object') return null
   const v = raw as RawFriendGroup
-  if (typeof v.id !== 'string' || typeof v.name !== 'string') return null
-  return { id: v.id, name: v.name }
+  if (typeof v.name !== 'string') return null
+  if (typeof v.id !== 'number' && typeof v.id !== 'string') return null
+  return { id: String(v.id), name: v.name }
 }
 
 export async function fetchFriends(client: LcuHttpClient): Promise<FriendSummary[]> {

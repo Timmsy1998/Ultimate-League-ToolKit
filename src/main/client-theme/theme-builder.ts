@@ -27,7 +27,7 @@ function classifyBackground(value: string): { kind: BackgroundKind; url: string 
 }
 
 function imageBackgroundRule(url: string): string {
-  return `body { background-image: url(${JSON.stringify(url)}) !important; background-size: cover; background-position: center; }`
+  return `body { background-image: url(${JSON.stringify(url)}) !important; background-size: cover; background-position: center; }\nbody.ultk-bg-suppressed { background-image: none !important; }`
 }
 
 // The client renders its own opaque background layer (#background-ambient,
@@ -37,7 +37,13 @@ function imageBackgroundRule(url: string): string {
 // PenguLoader theme plugin (github.com/Elaina69/Elaina-theme, MIT) rather
 // than guessed; it hides these same two layers for the same reason.
 // Applies to every background kind, not just images.
-const BACKGROUND_OVERRIDE_RULE = '#background-ambient { display: none !important; } .background { background-image: unset !important; }'
+//
+// Both rules are scoped off the `ultk-bg-suppressed` body class that
+// backgroundScopeScript() below toggles, so the client's own default
+// background (splash art, store backdrop) reappears untouched on champ
+// select and the store instead of being replaced by the custom one there.
+const BACKGROUND_OVERRIDE_RULE =
+  'body:not(.ultk-bg-suppressed) #background-ambient { display: none !important; } body:not(.ultk-bg-suppressed) .background { background-image: unset !important; }'
 
 const CUSTOM_FONT_ASSET_PATTERN = /^custom-font\.(ttf|otf|woff2?)$/
 const CUSTOM_FONT_FAMILY = 'ULTKCustomFont'
@@ -71,6 +77,15 @@ function customFontRule(filename: string): string {
 // down from that reference to just the local user's own summoner (matched
 // by summoner-id/puuid) since we're only reskinning what the local user
 // sees of themselves, never touching how anyone else's icon/banner render.
+//
+// The top-right nav bar's own summoner icon (lol-uikit-radial-progress.
+// summoner-level-icon) is a separate, simpler case: it's confirmed live
+// against a real client's DOM (not the Elaina-theme reference, which
+// doesn't cover it) rather than guessed, and — unlike the regalia
+// elements — its img sits in ordinary light DOM (slotted content is still
+// reachable via a plain selector), and there's only ever one of these per
+// session, always the local user, so no summoner-id/puuid ownership check
+// is needed for it.
 function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string | null): string {
   if (!bannerDataUri && !iconDataUri) return ''
   return `(() => {
@@ -144,6 +159,19 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
     return didIcon || didBanner;
   }
 
+  // Unlike the regalia elements above, this img is ordinary light DOM
+  // (slotted content is still reachable via a plain selector on the host),
+  // there's only ever one instance, and it's always the local user's own
+  // icon — no shadow-root traversal or ownership check needed.
+  function applyTopNavIcon(element) {
+    if (!ICON_URL) return false;
+    const icon = element.querySelector('img.icon-image');
+    if (!icon) return false;
+    icon.src = ICON_URL;
+    freezeProperty(icon, 'src');
+    return true;
+  }
+
   // Shadow roots fill in asynchronously as the component finishes
   // rendering, so a single attempt right at creation often finds nothing
   // yet. A MutationObserver on element only ever sees that element's own
@@ -158,7 +186,7 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
   // once the client finishes rendering it, however many shadow roots deep
   // that is, then stops itself — this is a one-shot burst tied to a single
   // element mounting, not an ongoing background loop.
-  function watch(element) {
+  function watch(element, applyFn) {
     let attempts = 0;
     const startedAt = Date.now();
     let debounceTimer = null;
@@ -180,7 +208,7 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
         return;
       }
       attempts++;
-      const applied = applyBoth(element);
+      const applied = applyFn(element);
       if (applied || Date.now() - startedAt >= 8000 || attempts >= 50) stop();
     };
 
@@ -201,9 +229,14 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
     'lol-regalia-profile-v2-element'
   ];
 
+  const TOP_NAV_SELECTORS = ['lol-uikit-radial-progress.summoner-level-icon'];
+
   function watchWithin(root) {
     REGALIA_SELECTORS.forEach((selector) => {
-      root.querySelectorAll(selector).forEach(watch);
+      root.querySelectorAll(selector).forEach((el) => watch(el, applyBoth));
+    });
+    TOP_NAV_SELECTORS.forEach((selector) => {
+      root.querySelectorAll(selector).forEach((el) => watch(el, applyTopNavIcon));
     });
   }
 
@@ -219,7 +252,10 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof Element)) return;
           REGALIA_SELECTORS.forEach((selector) => {
-            if (node.matches(selector)) watch(node);
+            if (node.matches(selector)) watch(node, applyBoth);
+          });
+          TOP_NAV_SELECTORS.forEach((selector) => {
+            if (node.matches(selector)) watch(node, applyTopNavIcon);
           });
           watchWithin(node);
         });
@@ -242,6 +278,7 @@ function videoBackgroundScript(url: string): string {
   // null (reading 'prepend')" at plugin load.
   function start() {
     const video = document.createElement('video');
+    video.id = 'ultk-bg-video';
     video.src = ${JSON.stringify(url)};
     video.muted = true;
     video.volume = 0;
@@ -253,8 +290,63 @@ function videoBackgroundScript(url: string): string {
     document.body.prepend(video);
     video.play().catch(() => {});
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) video.pause(); else video.play().catch(() => {});
+      if (document.hidden) video.pause();
+      else if (!document.body.classList.contains('ultk-bg-suppressed')) video.play().catch(() => {});
     });
+  }
+  if (document.body) start();
+  else document.addEventListener('DOMContentLoaded', start, { once: true });
+})();`
+}
+
+// Toggles `ultk-bg-suppressed` on <body> so the custom background (image
+// CSS rule or the video element above) gets out of the way on champ select
+// and the store, per the user's ask that those two views keep the client's
+// own look. Champ select is detected via the official, documented local
+// LCU endpoint (/lol-gameflow/v1/gameflow-phase) rather than a guessed DOM
+// selector — polled rather than pushed since a plain page script has no
+// direct line to the client's own event socket, but at a long enough
+// interval that the latency is imperceptible against how long champ select
+// actually lasts (CLAUDE.md §4: longest acceptable polling interval). The
+// store's #rcp-fe-lol-store-iframe id is a real, confirmed selector from a
+// working PenguLoader plugin (github.com/Elaina69/Elaina-theme, MIT — see
+// src/plugins/customIcon.ts's CustomLoadingIcon), not guessed, and its
+// presence/absence is push-driven via MutationObserver, no polling needed.
+function backgroundScopeScript(): string {
+  return `(() => {
+  let champSelectActive = false;
+  let storeActive = false;
+
+  function updateSuppression() {
+    if (!document.body) return;
+    const suppressed = champSelectActive || storeActive;
+    document.body.classList.toggle('ultk-bg-suppressed', suppressed);
+    const video = document.getElementById('ultk-bg-video');
+    if (!video) return;
+    if (suppressed) video.pause();
+    else if (!document.hidden) video.play().catch(() => {});
+  }
+
+  function pollGameflowPhase() {
+    fetch('/lol-gameflow/v1/gameflow-phase')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((phase) => {
+        champSelectActive = phase === 'ChampSelect';
+        updateSuppression();
+      })
+      .catch(() => {});
+  }
+
+  function start() {
+    pollGameflowPhase();
+    setInterval(pollGameflowPhase, 1500);
+
+    function checkStore() {
+      storeActive = !!document.querySelector('#rcp-fe-lol-store-iframe');
+      updateSuppression();
+    }
+    checkStore();
+    new MutationObserver(checkStore).observe(document.body, { childList: true, subtree: true });
   }
   if (document.body) start();
   else document.addEventListener('DOMContentLoaded', start, { once: true });
@@ -279,6 +371,7 @@ export function buildThemePackage(settings: Settings): ClientThemePackage {
       } else {
         cssRules.push(imageBackgroundRule(background.url))
       }
+      jsStatements.push(backgroundScopeScript())
       if (!background.url.startsWith('data:')) {
         backgroundAssetFilename = settings.clientThemeBackground
       }
