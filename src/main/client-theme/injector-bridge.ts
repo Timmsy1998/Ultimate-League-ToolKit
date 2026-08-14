@@ -4,7 +4,7 @@ import path from 'node:path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import type { ClientThemePackage } from '../../shared/client-theme-types'
-import { readBackgroundAsset } from './asset-store'
+import { readBackgroundAsset, readFontAsset } from './asset-store'
 import { logLine } from './logger'
 
 // Vendored from PenguLoader (MIT license — see THIRD_PARTY_NOTICES.md),
@@ -123,25 +123,29 @@ export async function disable(): Promise<void> {
   }
 }
 
-// Copies (or clears) the active background file into the plugin's own
-// assets/ folder — PenguLoader only resolves asset URLs relative to the
-// plugin that references them, so the source-of-truth copy in userData
-// isn't reachable from the client's page directly. Only touches
-// background.* entries so a font asset written by a later apply (see the
-// custom-fonts feature) never gets clobbered.
-async function syncBackgroundAsset(filename: string | null): Promise<void> {
+// Copies (or clears) an active asset file into the plugin's own assets/
+// folder — PenguLoader only resolves asset URLs relative to the plugin
+// that references them, so the source-of-truth copy in userData isn't
+// reachable from the client's page directly. Only touches files sharing
+// the given prefix, so background.* and custom-font.* never clobber
+// each other on the same apply.
+async function syncAsset(
+  prefix: string,
+  filename: string | null,
+  readAsset: (name: string) => Promise<Buffer>
+): Promise<void> {
   const assetsDestDir = path.join(pluginDir(), 'assets')
   await mkdir(assetsDestDir, { recursive: true })
 
   const existing = await readdir(assetsDestDir).catch(() => [] as string[])
   await Promise.all(
     existing
-      .filter((name) => name.startsWith('background.') && name !== filename)
+      .filter((name) => name.startsWith(prefix) && name !== filename)
       .map((name) => rm(path.join(assetsDestDir, name), { force: true }))
   )
 
   if (filename) {
-    const bytes = await readBackgroundAsset(filename)
+    const bytes = await readAsset(filename)
     await writeFile(path.join(assetsDestDir, filename), bytes)
   }
 }
@@ -160,8 +164,13 @@ export async function applyTheme(pkg: ClientThemePackage): Promise<void> {
 
   try {
     await writeFile(path.join(dir, PLUGIN_ENTRY_FILE), parts.join('\n'), 'utf-8')
-    await syncBackgroundAsset(pkg.backgroundAssetFilename)
-    await logLine('applyTheme() wrote plugin', { dir, backgroundAsset: pkg.backgroundAssetFilename })
+    await syncAsset('background.', pkg.backgroundAssetFilename, readBackgroundAsset)
+    await syncAsset('custom-font.', pkg.fontAssetFilename, readFontAsset)
+    await logLine('applyTheme() wrote plugin', {
+      dir,
+      backgroundAsset: pkg.backgroundAssetFilename,
+      fontAsset: pkg.fontAssetFilename
+    })
   } catch (error) {
     await logLine('applyTheme() failed', error)
     throw error

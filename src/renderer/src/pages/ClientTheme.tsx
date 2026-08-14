@@ -45,6 +45,13 @@ const FONT_PRESETS = [
   { label: 'IBM Plex Mono', value: '"IBM Plex Mono", monospace' }
 ] as const
 
+const FONT_FILE_ACCEPT = '.ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2'
+const MAX_FONT_BYTES = 5 * 1024 * 1024
+
+function describeFontAsset(value: string | null): string {
+  return value ? 'Custom font set — overrides the preset above.' : 'Or upload your own TTF, OTF, WOFF, or WOFF2 file.'
+}
+
 type ImageField = 'clientThemeBannerImage' | 'clientThemeIconImage'
 
 function readImageAsDataUri(file: File): Promise<string> {
@@ -114,6 +121,7 @@ export function ClientTheme(): React.JSX.Element {
   const [logLines, setLogLines] = useState<string[]>([])
   const [logLoading, setLogLoading] = useState(false)
   const [backgroundStatus, setBackgroundStatus] = useState<string | null>(null)
+  const [fontStatus, setFontStatus] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -164,6 +172,36 @@ export function ClientTheme(): React.JSX.Element {
     setBackgroundStatus(null)
     await window.api.clientTheme.clearBackgroundAsset()
     updateSettings({ clientThemeBackground: null })
+  }
+
+  async function pickFont(file: File): Promise<void> {
+    setFontStatus(null)
+    if (file.size > MAX_FONT_BYTES) {
+      setFontStatus('That font file is too large (max 5 MB).')
+      return
+    }
+    try {
+      const bytes = await file.arrayBuffer()
+      const filename = await window.api.clientTheme.setFontAsset(bytes)
+      // Custom font and the preset dropdown are mutually exclusive — the
+      // upload wins, so clear the preset here.
+      updateSettings({ clientThemeCustomFontAsset: filename, clientThemeFont: null })
+    } catch (err) {
+      setFontStatus(err instanceof Error ? err.message : 'Failed to set font.')
+    }
+  }
+
+  async function clearFont(): Promise<void> {
+    setFontStatus(null)
+    await window.api.clientTheme.clearFontAsset()
+    updateSettings({ clientThemeCustomFontAsset: null })
+  }
+
+  async function pickFontPreset(value: string | null): Promise<void> {
+    if (settings.clientThemeCustomFontAsset) {
+      await window.api.clientTheme.clearFontAsset()
+    }
+    updateSettings({ clientThemeFont: value, clientThemeCustomFontAsset: null })
   }
 
   async function toggleInjector(enable: boolean): Promise<void> {
@@ -359,7 +397,8 @@ export function ClientTheme(): React.JSX.Element {
             <select
               className={themeStyles.fontSelect}
               value={settings.clientThemeFont ?? ''}
-              onChange={(e) => updateSettings({ clientThemeFont: e.target.value || null })}
+              disabled={!!settings.clientThemeCustomFontAsset}
+              onChange={(e) => void pickFontPreset(e.target.value || null)}
             >
               {FONT_PRESETS.map((preset) => (
                 <option key={preset.label} value={preset.value ?? ''}>
@@ -368,6 +407,16 @@ export function ClientTheme(): React.JSX.Element {
               ))}
             </select>
           </div>
+          <div className={settingsStyles.divider} />
+          <ImagePickerRow
+            title="Custom font"
+            description={fontStatus ?? describeFontAsset(settings.clientThemeCustomFontAsset)}
+            value={settings.clientThemeCustomFontAsset}
+            accept={FONT_FILE_ACCEPT}
+            buttonLabel="Choose font file"
+            onPick={(file) => void pickFont(file)}
+            onClear={() => void clearFont()}
+          />
         </div>
       </section>
 

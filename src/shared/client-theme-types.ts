@@ -5,6 +5,8 @@ export interface ClientThemePackage {
   // video, or an uploaded image) rather than a data URI — tells
   // injector-bridge.ts what to copy into the plugin's own assets folder.
   backgroundAssetFilename: string | null
+  // Same idea for an uploaded custom font, e.g. "custom-font.woff2".
+  fontAssetFilename: string | null
 }
 
 // Why a live reload didn't happen, when it didn't — lets the UI explain

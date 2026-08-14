@@ -98,7 +98,9 @@ const clientTheme = {
   openLogFolder: (): Promise<void> => ipcRenderer.invoke('client-theme:open-log-folder'),
   setBackgroundAsset: (bytes: ArrayBuffer): Promise<string> =>
     ipcRenderer.invoke('client-theme:set-background-asset', bytes),
-  clearBackgroundAsset: (): Promise<void> => ipcRenderer.invoke('client-theme:clear-background-asset')
+  clearBackgroundAsset: (): Promise<void> => ipcRenderer.invoke('client-theme:clear-background-asset'),
+  setFontAsset: (bytes: ArrayBuffer): Promise<string> => ipcRenderer.invoke('client-theme:set-font-asset', bytes),
+  clearFontAsset: (): Promise<void> => ipcRenderer.invoke('client-theme:clear-font-asset')
 }
 
 const updater = {

@@ -30,6 +30,27 @@ function imageBackgroundRule(url: string): string {
   return `body { background-image: url(${JSON.stringify(url)}) !important; background-size: cover; background-position: center; }`
 }
 
+const CUSTOM_FONT_ASSET_PATTERN = /^custom-font\.(ttf|otf|woff2?)$/
+const CUSTOM_FONT_FAMILY = 'ULTKCustomFont'
+
+const FONT_FORMATS: Record<string, string> = {
+  ttf: 'truetype',
+  otf: 'opentype',
+  woff: 'woff',
+  woff2: 'woff2'
+}
+
+// A fixed, ULTK-chosen font-family name means no user-supplied CSS
+// identifier ever needs validating — the uploaded file is always referred
+// to as CUSTOM_FONT_FAMILY, never a name the renderer provides.
+function customFontRule(filename: string): string {
+  const ext = CUSTOM_FONT_ASSET_PATTERN.exec(filename)?.[1]
+  const format = ext ? FONT_FORMATS[ext] : undefined
+  const url = `//plugins/ultk-theme/assets/${filename}`
+  const src = format ? `url(${JSON.stringify(url)}) format(${JSON.stringify(format)})` : `url(${JSON.stringify(url)})`
+  return `@font-face { font-family: '${CUSTOM_FONT_FAMILY}'; src: ${src}; }\n* { font-family: '${CUSTOM_FONT_FAMILY}' !important; }`
+}
+
 // Muted/no-controls/no-PiP per the user's "nobody wants audio" ask, plus a
 // visibilitychange pause — the concrete form of CLAUDE.md §4's "no feature
 // may assume a high-resource machine" for anything this visually heavy.
@@ -56,6 +77,7 @@ export function buildThemePackage(settings: Settings): ClientThemePackage {
   const cssRules: string[] = []
   const jsStatements: string[] = []
   let backgroundAssetFilename: string | null = null
+  let fontAssetFilename: string | null = null
 
   if (settings.clientThemeEnabled && settings.clientThemeBackground) {
     const background = classifyBackground(settings.clientThemeBackground)
@@ -78,7 +100,13 @@ export function buildThemePackage(settings: Settings): ClientThemePackage {
     cssRules.push(`:root { --accent-color: ${settings.clientThemeAccentColor} !important; }`)
   }
 
-  if (settings.clientThemeEnabled && settings.clientThemeFont) {
+  // A custom uploaded font takes precedence over the preset dropdown — the
+  // UI keeps these mutually exclusive, but this order makes that true even
+  // if settings ever end up with both set.
+  if (settings.clientThemeEnabled && settings.clientThemeCustomFontAsset) {
+    cssRules.push(customFontRule(settings.clientThemeCustomFontAsset))
+    fontAssetFilename = settings.clientThemeCustomFontAsset
+  } else if (settings.clientThemeEnabled && settings.clientThemeFont) {
     cssRules.push(`* { font-family: ${settings.clientThemeFont} !important; }`)
   }
 
@@ -94,5 +122,5 @@ export function buildThemePackage(settings: Settings): ClientThemePackage {
     )
   }
 
-  return { css: cssRules.join('\n'), js: jsStatements.join('\n'), backgroundAssetFilename }
+  return { css: cssRules.join('\n'), js: jsStatements.join('\n'), backgroundAssetFilename, fontAssetFilename }
 }
