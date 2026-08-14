@@ -12,12 +12,16 @@ async function main() {
   await mkdir(outDir, { recursive: true })
   const svg = await readFile(svgPath)
 
+  // Each size is an independent render/write with no shared state, so
+  // there's no reason to serialize them.
   const pngBuffers = {}
-  for (const size of sizes) {
-    const buf = await sharp(svg, { density: 384 }).resize(size, size).png().toBuffer()
-    pngBuffers[size] = buf
-    await writeFile(path.join(outDir, `${size}.png`), buf)
-  }
+  await Promise.all(
+    sizes.map(async (size) => {
+      const buf = await sharp(svg, { density: 384 }).resize(size, size).png().toBuffer()
+      pngBuffers[size] = buf
+      await writeFile(path.join(outDir, `${size}.png`), buf)
+    })
+  )
 
   // Windows .ico bundles a handful of representative sizes into one file.
   const icoBuffer = await pngToIco([
