@@ -7,6 +7,7 @@ import {
   enable as enableClientTheme,
   isEnabled as isClientThemeEnabled
 } from './client-theme/injector-bridge'
+import { ensureLogDirectory, getLogFilePath, readRecentLines } from './client-theme/logger'
 import { buildThemePackage } from './client-theme/theme-builder'
 import { LcuConnectionManager } from './lcu/connection-manager'
 import {
@@ -176,6 +177,11 @@ function registerClientThemeBridge(): void {
   ipcMain.handle('client-theme:enable', () => enableClientTheme())
   ipcMain.handle('client-theme:disable', () => disableClientTheme())
   ipcMain.handle('client-theme:status', () => isClientThemeEnabled())
+  ipcMain.handle('client-theme:get-log', () => readRecentLines())
+  ipcMain.handle('client-theme:open-log-folder', async () => {
+    await ensureLogDirectory()
+    shell.showItemInFolder(getLogFilePath())
+  })
 }
 
 function registerRuneBookBridge(): void {

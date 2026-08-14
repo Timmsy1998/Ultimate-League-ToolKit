@@ -69,6 +69,8 @@ export interface ClientThemeBridge {
   enable: () => Promise<void>
   disable: () => Promise<void>
   status: () => Promise<boolean>
+  getLog: () => Promise<string[]>
+  openLogFolder: () => Promise<void>
 }
 
 export interface UpdaterBridge {
