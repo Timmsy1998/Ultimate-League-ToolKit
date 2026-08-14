@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { EditableRunePage } from '../../../../shared/lcu-types'
 import type { RuneBookPage } from '../../../../shared/rune-book-types'
 import styles from './ImportDialog.module.css'
@@ -24,6 +24,7 @@ export function ImportDialog({ page, onClose }: ImportDialogProps): React.JSX.El
   const [state, setState] = useState<DialogState>('importing')
   const [editablePages, setEditablePages] = useState<EditableRunePage[]>([])
   const [errorMessage, setErrorMessage] = useState('')
+  const hasStartedImport = useRef(false)
 
   async function attemptImport(overwritePageId?: number): Promise<void> {
     setState('importing')
@@ -57,6 +58,12 @@ export function ImportDialog({ page, onClose }: ImportDialogProps): React.JSX.El
   }
 
   useEffect(() => {
+    // StrictMode double-invokes mount effects in dev (mount, cleanup, mount
+    // again) on the same component instance — without this guard that fired
+    // the import LCU call twice. The ref survives that cycle since only the
+    // effect re-runs, not the component state, so it still only imports once.
+    if (hasStartedImport.current) return
+    hasStartedImport.current = true
     void attemptImport()
     // Only run once, on mount — retries go through attemptImport directly.
     // eslint-disable-next-line react-hooks/exhaustive-deps
