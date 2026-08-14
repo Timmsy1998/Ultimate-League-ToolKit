@@ -276,60 +276,82 @@ function registerSettingsBridge(): void {
   })
 }
 
-app.whenReady().then(async () => {
-  electronApp.setAppUserModelId(APP_USER_MODEL_ID)
+// Without this, launching a second copy (e.g. Windows "launch on startup"
+// firing while a manual launch is already running, or just double-clicking
+// twice) creates a second full process with its own hidden window — no
+// tray icon and no second-instance handling meant a stuck/hung instance
+// was invisible (window never shown) yet still alive, which is exactly
+// what made the NSIS installer's "app is running" check block an update
+// with nothing visibly open to close. Wrapping the rest of startup in the
+// else branch (Electron's own documented pattern) guarantees the losing
+// instance never creates a window or starts any service before quitting.
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
 
-  const settings = await readSettings()
-  app.setLoginItemSettings({ openAtLogin: settings.launchOnStartup })
-  registerSettingsBridge()
-
-  // Keep devtools/reload shortcuts out of production builds; harmless and
-  // convenient in dev.
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
+if (!gotSingleInstanceLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) return
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
   })
 
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    // Dev needs 'unsafe-inline'/'unsafe-eval' for Vite's HMR client and React
-    // Fast Refresh preamble — neither is present in the production build.
-    const csp = is.dev
-      ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: http://localhost:*"
-      : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+  app.whenReady().then(async () => {
+    electronApp.setAppUserModelId(APP_USER_MODEL_ID)
 
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [csp]
-      }
+    const settings = await readSettings()
+    app.setLoginItemSettings({ openAtLogin: settings.launchOnStartup })
+    registerSettingsBridge()
+
+    // Keep devtools/reload shortcuts out of production builds; harmless and
+    // convenient in dev.
+    app.on('browser-window-created', (_, window) => {
+      optimizer.watchWindowShortcuts(window)
+    })
+
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      // Dev needs 'unsafe-inline'/'unsafe-eval' for Vite's HMR client and React
+      // Fast Refresh preamble — neither is present in the production build.
+      const csp = is.dev
+        ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: http://localhost:*"
+        : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [csp]
+        }
+      })
+    })
+
+    ipcMain.handle('app:get-version', () => app.getVersion())
+
+    createWindow(await resolveInitialTheme())
+    registerLcuBridge()
+    registerClientThemeBridge()
+    registerRuneBookBridge()
+    registerRankHistoryBridge()
+    registerUpdaterBridge()
+    // Loopback-only; endpoints self-gate on injectedToolsEnabled and a
+    // persisted bearer token, so an idle listener here costs nothing and
+    // avoids the injected panel racing this app's own startup.
+    startToolsServer(lcuManager)
+
+    app.on('activate', async () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow(await resolveInitialTheme())
     })
   })
 
-  ipcMain.handle('app:get-version', () => app.getVersion())
-
-  createWindow(await resolveInitialTheme())
-  registerLcuBridge()
-  registerClientThemeBridge()
-  registerRuneBookBridge()
-  registerRankHistoryBridge()
-  registerUpdaterBridge()
-  // Loopback-only; endpoints self-gate on injectedToolsEnabled and a
-  // persisted bearer token, so an idle listener here costs nothing and
-  // avoids the injected panel racing this app's own startup.
-  startToolsServer(lcuManager)
-
-  app.on('activate', async () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow(await resolveInitialTheme())
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
   })
-})
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
-
-app.on('before-quit', () => {
-  lcuManager.stop()
-  stopToolsServer()
-  appUpdater.stop()
-})
+  app.on('before-quit', () => {
+    lcuManager.stop()
+    stopToolsServer()
+    appUpdater.stop()
+  })
+}
