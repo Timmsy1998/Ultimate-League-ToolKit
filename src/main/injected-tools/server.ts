@@ -110,6 +110,17 @@ async function handleRequest(
       return
     }
 
+    // Only ever called right after a dodge's own /leave-lobby succeeds
+    // (see tools-builder.ts) — the client's champ-select UI otherwise
+    // lingers on stale gameflow state for a moment after leaving, so this
+    // forces the same reload client-theme's own apply flow already uses
+    // elsewhere to clear it immediately.
+    if (req.method === 'POST' && req.url === '/restart-client') {
+      await lcuManager.restartClientUx()
+      sendJson(res, 200, { ok: true })
+      return
+    }
+
     if (req.method === 'GET' && req.url === '/friends') {
       const [friends, groups] = await Promise.all([lcuManager.getFriends(), lcuManager.getFriendGroups()])
       sendJson(res, 200, { friends, groups })

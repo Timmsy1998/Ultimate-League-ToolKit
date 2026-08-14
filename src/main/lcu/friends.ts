@@ -13,13 +13,24 @@ interface RawFriendGroup {
   name?: unknown
 }
 
+// groupId is best-effort metadata, not a validity requirement — most
+// players never bother sorting friends into custom chat groups, so the LCU
+// leaves groupId null/absent for the (common) ungrouped case. Requiring a
+// string here used to drop every ungrouped friend from the list entirely,
+// which for most accounts meant nearly all of them — showing "no friends
+// online" even with friends actually online.
 function toFriendSummary(raw: unknown): FriendSummary | null {
   if (!raw || typeof raw !== 'object') return null
   const v = raw as RawFriend
   if (typeof v.summonerId !== 'number' || typeof v.name !== 'string') return null
-  if (typeof v.groupId !== 'string' || typeof v.availability !== 'string') return null
+  if (typeof v.availability !== 'string') return null
 
-  return { summonerId: v.summonerId, name: v.name, groupId: v.groupId, availability: v.availability }
+  return {
+    summonerId: v.summonerId,
+    name: v.name,
+    groupId: typeof v.groupId === 'string' ? v.groupId : '',
+    availability: v.availability
+  }
 }
 
 function toFriendGroup(raw: unknown): FriendGroup | null {
