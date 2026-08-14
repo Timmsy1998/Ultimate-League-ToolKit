@@ -18,7 +18,7 @@ interface SniffResult {
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 const MAX_GIF_BYTES = 25 * 1024 * 1024
-const MAX_VIDEO_BYTES = 100 * 1024 * 1024
+const MAX_VIDEO_BYTES = 250 * 1024 * 1024
 
 const BACKGROUND_EXTENSIONS = ['png', 'jpg', 'webp', 'gif', 'mp4', 'webm']
 
