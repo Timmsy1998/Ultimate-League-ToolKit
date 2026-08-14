@@ -92,7 +92,9 @@ const clientTheme = {
   apply: (): Promise<void> => ipcRenderer.invoke('client-theme:apply'),
   enable: (): Promise<void> => ipcRenderer.invoke('client-theme:enable'),
   disable: (): Promise<void> => ipcRenderer.invoke('client-theme:disable'),
-  status: (): Promise<boolean> => ipcRenderer.invoke('client-theme:status')
+  status: (): Promise<boolean> => ipcRenderer.invoke('client-theme:status'),
+  getLog: (): Promise<string[]> => ipcRenderer.invoke('client-theme:get-log'),
+  openLogFolder: (): Promise<void> => ipcRenderer.invoke('client-theme:open-log-folder')
 }
 
 const updater = {

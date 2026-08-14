@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, RefreshCw, ShieldCheck } from 'lucide-react'
+import { Check, FolderOpen, RefreshCw, ShieldCheck } from 'lucide-react'
 import { Toggle } from '@renderer/components/Toggle/Toggle'
 import { useSettings } from '@renderer/settings/SettingsContext'
 import themeStyles from './ClientTheme.module.css'
@@ -70,6 +70,8 @@ export function ClientTheme(): React.JSX.Element {
   const [injectorStatus, setInjectorStatus] = useState<string | null>(null)
   const [applyStatus, setApplyStatus] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
+  const [logLines, setLogLines] = useState<string[]>([])
+  const [logLoading, setLogLoading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -80,6 +82,20 @@ export function ClientTheme(): React.JSX.Element {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    void loadLog()
+  }, [])
+
+  async function loadLog(): Promise<void> {
+    setLogLoading(true)
+    try {
+      const lines = await window.api.clientTheme.getLog()
+      setLogLines(lines)
+    } finally {
+      setLogLoading(false)
+    }
+  }
 
   async function pickImage(field: ImageField, file: File): Promise<void> {
     const dataUri = await readImageAsDataUri(file)
@@ -103,6 +119,7 @@ export function ClientTheme(): React.JSX.Element {
       setInjectorStatus(err instanceof Error ? err.message : 'Failed to update the client hook.')
     } finally {
       setInjectorBusy(false)
+      void loadLog()
     }
   }
 
@@ -116,6 +133,7 @@ export function ClientTheme(): React.JSX.Element {
       setApplyStatus(err instanceof Error ? err.message : 'Failed to apply theme.')
     } finally {
       setApplying(false)
+      void loadLog()
     }
   }
 
@@ -158,6 +176,42 @@ export function ClientTheme(): React.JSX.Element {
               {injectorEnabled ? 'Disable / restore default client' : 'Enable'}
             </button>
           </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Diagnostics</h2>
+        <div className={settingsStyles.panel}>
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Client hook log</p>
+              <p className={settingsStyles.rowDescription}>
+                What ULTK did the last time it enabled, disabled, or applied the client hook — useful if something
+                doesn't seem to be taking effect.
+              </p>
+            </div>
+            <div className={themeStyles.actions}>
+              <button type="button" className={settingsStyles.updateButton} onClick={() => void loadLog()}>
+                {logLoading ? (
+                  <RefreshCw size={14} strokeWidth={1.75} className={settingsStyles.spin} aria-hidden="true" />
+                ) : (
+                  <RefreshCw size={14} strokeWidth={1.75} aria-hidden="true" />
+                )}
+                Refresh
+              </button>
+              <button
+                type="button"
+                className={settingsStyles.updateButton}
+                onClick={() => void window.api.clientTheme.openLogFolder()}
+              >
+                <FolderOpen size={14} strokeWidth={1.75} aria-hidden="true" />
+                Open log folder
+              </button>
+            </div>
+          </div>
+          <pre className={themeStyles.logBox}>
+            {logLines.length > 0 ? logLines.join('\n') : 'No log entries yet.'}
+          </pre>
         </div>
       </section>
 
