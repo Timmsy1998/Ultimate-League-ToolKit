@@ -29,3 +29,19 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
 }
+
+.logBox {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: var(--space-3);
+  margin: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  white-space: pre-wrap;
+  word-break: break-word;
+}

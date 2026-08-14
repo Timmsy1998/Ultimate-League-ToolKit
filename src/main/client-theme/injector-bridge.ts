@@ -1,9 +1,10 @@
 import { execFile, spawn } from 'node:child_process'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { app } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import type { ClientThemePackage } from '../../shared/client-theme-types'
+import { logLine } from './logger'
 
 // Vendored from PenguLoader (MIT license — see THIRD_PARTY_NOTICES.md),
 // built by CI from native/vendor/pengu-loader and bundled as an
@@ -14,7 +15,12 @@ import type { ClientThemePackage } from '../../shared/client-theme-types'
 // separate loader application, since we only need the DLL, not their UI.
 const IFEO_VALUE_PATH =
   'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\LeagueClientUx.exe'
-const PLUGIN_FILE_NAME = 'ultk-theme.js'
+// PenguLoader discovers plugins by folder, not by loose file — each plugin
+// is its own subdirectory with an index.js entry point (confirmed against
+// PenguLoader/docs' javascript-plugin.md and module-system.md). A flat
+// ultk-theme.js sitting directly in plugins/ is invisible to it.
+const PLUGIN_DIR_NAME = 'ultk-theme'
+const PLUGIN_ENTRY_FILE = 'index.js'
 
 function resourcesRoot(): string {
   // Packaged builds get core.dll via electron-builder's extraResources,
@@ -34,6 +40,10 @@ function pluginsDir(): string {
   // native/vendor/pengu-loader/core/src/config.cc directly rather than
   // assuming it.
   return path.join(resourcesRoot(), 'plugins')
+}
+
+function pluginDir(): string {
+  return path.join(pluginsDir(), PLUGIN_DIR_NAME)
 }
 
 // Registry writes to HKLM need elevation. Rather than run all of ULTK
@@ -65,9 +75,30 @@ function runElevatedReg(regArgs: string[]): Promise<void> {
 // instead of the real exe, which is how core.dll ends up loaded before the
 // client has finished starting. Confirmed against PenguLoader's own
 // loader/Main/IFEO.cs and the @6000 export name in core/res/module.def.
+async function coreDllExists(): Promise<boolean> {
+  try {
+    await stat(coreDllPath())
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function enable(): Promise<void> {
+  if (!(await coreDllExists())) {
+    const message = `core.dll not found at ${coreDllPath()} — run the native build first`
+    await logLine('enable() aborted: core.dll missing', coreDllPath())
+    throw new Error(message)
+  }
+
   const debuggerValue = `rundll32 "${coreDllPath()}",#6000`
-  await runElevatedReg(['add', IFEO_VALUE_PATH, '/v', 'Debugger', '/t', 'REG_SZ', '/d', debuggerValue, '/f'])
+  try {
+    await runElevatedReg(['add', IFEO_VALUE_PATH, '/v', 'Debugger', '/t', 'REG_SZ', '/d', debuggerValue, '/f'])
+    await logLine('enable() succeeded', { coreDllPath: coreDllPath() })
+  } catch (error) {
+    await logLine('enable() failed', error)
+    throw error
+  }
 }
 
 // Reading HKLM doesn't need elevation (only writing does), so this can run
@@ -83,14 +114,16 @@ export function isEnabled(): Promise<boolean> {
 export async function disable(): Promise<void> {
   try {
     await runElevatedReg(['delete', IFEO_VALUE_PATH, '/f'])
-  } catch {
+    await logLine('disable() succeeded')
+  } catch (error) {
     // Deleting a value that's already gone isn't a real failure — the end
     // state disable() promises (no Debugger override) already holds.
+    await logLine('disable() reg delete errored (likely already absent)', error)
   }
 }
 
 export async function applyTheme(pkg: ClientThemePackage): Promise<void> {
-  const dir = pluginsDir()
+  const dir = pluginDir()
   await mkdir(dir, { recursive: true })
 
   const parts: string[] = []
@@ -101,9 +134,16 @@ export async function applyTheme(pkg: ClientThemePackage): Promise<void> {
   }
   if (pkg.js) parts.push(pkg.js)
 
-  await writeFile(path.join(dir, PLUGIN_FILE_NAME), parts.join('\n'), 'utf-8')
+  try {
+    await writeFile(path.join(dir, PLUGIN_ENTRY_FILE), parts.join('\n'), 'utf-8')
+    await logLine('applyTheme() wrote plugin', { dir })
+  } catch (error) {
+    await logLine('applyTheme() failed', error)
+    throw error
+  }
 }
 
 export async function removeTheme(): Promise<void> {
-  await rm(path.join(pluginsDir(), PLUGIN_FILE_NAME), { force: true })
+  await rm(pluginDir(), { recursive: true, force: true })
+  await logLine('removeTheme() removed plugin dir', { dir: pluginDir() })
 }
