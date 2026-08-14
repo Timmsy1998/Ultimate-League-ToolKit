@@ -30,6 +30,15 @@ function imageBackgroundRule(url: string): string {
   return `body { background-image: url(${JSON.stringify(url)}) !important; background-size: cover; background-position: center; }`
 }
 
+// The client renders its own opaque background layer (#background-ambient,
+// .background) in front of a plain `body` background, which otherwise
+// makes any custom background (image, gif, or the video element below)
+// invisible regardless of z-index — confirmed against a real, working
+// PenguLoader theme plugin (github.com/Elaina69/Elaina-theme, MIT) rather
+// than guessed; it hides these same two layers for the same reason.
+// Applies to every background kind, not just images.
+const BACKGROUND_OVERRIDE_RULE = '#background-ambient { display: none !important; } .background { background-image: unset !important; }'
+
 const CUSTOM_FONT_ASSET_PATTERN = /^custom-font\.(ttf|otf|woff2?)$/
 const CUSTOM_FONT_FAMILY = 'ULTKCustomFont'
 
@@ -215,6 +224,7 @@ export function buildThemePackage(settings: Settings): ClientThemePackage {
       background !== null && background.kind !== 'image' && settings.clientThemeReducedMotion
 
     if (background && !skipForReducedMotion) {
+      cssRules.push(BACKGROUND_OVERRIDE_RULE)
       if (background.kind === 'video') {
         jsStatements.push(videoBackgroundScript(background.url))
       } else {
