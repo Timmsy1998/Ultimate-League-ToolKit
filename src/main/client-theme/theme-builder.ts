@@ -146,27 +146,42 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
 
   // Shadow roots fill in asynchronously as the component finishes
   // rendering, so a single attempt right at creation often finds nothing
-  // yet — retry on mutation for a few seconds, then give up.
+  // yet. A MutationObserver on element only ever sees that element's own
+  // light DOM though — the icon/banner actually live several shadow-root
+  // boundaries down (element.shadowRoot -> lol-regalia-*-v2-element -> its
+  // own shadowRoot -> the image), and shadow-tree mutations never bubble
+  // out to an observer scoped outside them. Regalia data also resolves via
+  // its own async fetch (observed retrying after a 404 against a live
+  // client), so there's no single light-DOM event guaranteed to follow the
+  // image actually appearing. A short, bounded poll alongside the observer
+  // is the simple, correct fallback: it always eventually finds the image
+  // once the client finishes rendering it, however many shadow roots deep
+  // that is, then stops itself — this is a one-shot burst tied to a single
+  // element mounting, not an ongoing background loop.
   function watch(element) {
     let attempts = 0;
     const startedAt = Date.now();
     let debounceTimer = null;
+    let pollTimer = null;
     let stopped = false;
 
     const stop = () => {
+      if (stopped) return;
       stopped = true;
       if (debounceTimer !== null) clearTimeout(debounceTimer);
+      if (pollTimer !== null) clearInterval(pollTimer);
       observer.disconnect();
     };
 
     const tryApply = () => {
-      if (stopped || !element.isConnected) {
+      if (stopped) return;
+      if (!element.isConnected) {
         stop();
         return;
       }
       attempts++;
       const applied = applyBoth(element);
-      if (applied || Date.now() - startedAt >= 4000 || attempts >= 20) stop();
+      if (applied || Date.now() - startedAt >= 8000 || attempts >= 50) stop();
     };
 
     const observer = new MutationObserver(() => {
@@ -175,6 +190,7 @@ function regaliaProfileScript(bannerDataUri: string | null, iconDataUri: string 
       debounceTimer = setTimeout(tryApply, 50);
     });
     observer.observe(element, { attributes: true, childList: true, subtree: true });
+    pollTimer = setInterval(tryApply, 150);
     tryApply();
   }
 
