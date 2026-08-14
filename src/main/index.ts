@@ -21,6 +21,8 @@ import * as rankHistoryStore from './rank-history/store'
 import * as runeBookStore from './rune-book/store'
 import { readSettings, writeSettings } from './settings/store'
 import { appUpdater } from './updater/auto-updater'
+import type { ClientThemeApplyResult } from '../shared/client-theme-types'
+import type { GameflowPhase } from '../shared/lcu-types'
 
 const APP_USER_MODEL_ID = 'com.ultk.app'
 
@@ -164,11 +166,34 @@ function registerLcuBridge(): void {
   lcuManager.start()
 }
 
+// Phases where kicking the client back to its menu/lobby won't disrupt a
+// queue, champ select, or an active game.
+const SAFE_TO_RESTART_PHASES: GameflowPhase[] = ['None', 'Lobby']
+
 function registerClientThemeBridge(): void {
-  ipcMain.handle('client-theme:apply', async () => {
+  ipcMain.handle('client-theme:apply', async (): Promise<ClientThemeApplyResult> => {
     const settings = await readSettings()
     const pkg = buildThemePackage(settings)
     await applyTheme(pkg)
+
+    if (!settings.clientThemeEnabled || !(await isClientThemeEnabled())) {
+      return { reloaded: false, reason: 'hook-disabled' }
+    }
+
+    const snapshot = lcuManager.getSnapshot()
+    if (snapshot.status !== 'online') {
+      return { reloaded: false, reason: 'not-connected' }
+    }
+    if (!SAFE_TO_RESTART_PHASES.includes(snapshot.phase)) {
+      return { reloaded: false, reason: 'unsafe-phase' }
+    }
+
+    try {
+      await lcuManager.restartClientUx()
+      return { reloaded: true }
+    } catch {
+      return { reloaded: false, reason: 'restart-failed' }
+    }
   })
   // enable/disable are the HKLM registry toggle (needs an admin prompt —
   // see injector-bridge.ts); apply just writes the plugin file, which
