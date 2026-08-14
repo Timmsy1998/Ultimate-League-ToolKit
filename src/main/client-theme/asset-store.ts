@@ -82,3 +82,41 @@ export async function removeBackgroundAsset(): Promise<void> {
 export async function readBackgroundAsset(filename: string): Promise<Buffer> {
   return readFile(path.join(assetsDir(), filename))
 }
+
+const MAX_FONT_BYTES = 5 * 1024 * 1024
+const FONT_EXTENSIONS = ['ttf', 'otf', 'woff', 'woff2']
+
+function sniffFont(bytes: Buffer): string | null {
+  if (startsWith(bytes, [0x00, 0x01, 0x00, 0x00])) return 'ttf'
+  if (bytes.length >= 4 && ['true', 'ttcf'].includes(bytes.toString('ascii', 0, 4))) return 'ttf'
+  if (bytes.length >= 4 && bytes.toString('ascii', 0, 4) === 'OTTO') return 'otf'
+  if (bytes.length >= 4 && bytes.toString('ascii', 0, 4) === 'wOFF') return 'woff'
+  if (bytes.length >= 4 && bytes.toString('ascii', 0, 4) === 'wOF2') return 'woff2'
+  return null
+}
+
+export async function saveFontAsset(bytes: Buffer): Promise<string> {
+  const ext = sniffFont(bytes)
+  if (!ext) {
+    throw new Error('Unrecognized file — supported font types are TTF, OTF, WOFF, and WOFF2.')
+  }
+  if (bytes.length > MAX_FONT_BYTES) {
+    throw new Error('That font file is too large (max 5 MB).')
+  }
+
+  await removeFontAsset()
+  const dir = assetsDir()
+  await mkdir(dir, { recursive: true })
+  const filename = `custom-font.${ext}`
+  await writeFile(path.join(dir, filename), bytes)
+  return filename
+}
+
+export async function removeFontAsset(): Promise<void> {
+  const dir = assetsDir()
+  await Promise.all(FONT_EXTENSIONS.map((ext) => rm(path.join(dir, `custom-font.${ext}`), { force: true })))
+}
+
+export async function readFontAsset(filename: string): Promise<Buffer> {
+  return readFile(path.join(assetsDir(), filename))
+}

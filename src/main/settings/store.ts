@@ -52,6 +52,14 @@ function isNullableFontName(value: unknown): boolean {
   return value === null || (typeof value === 'string' && SAFE_FONT_NAME_PATTERN.test(value))
 }
 
+// Same closed-enum approach as backgrounds — a main-process-generated
+// filename, never anything the renderer supplies directly.
+const CUSTOM_FONT_ASSET_PATTERN = /^custom-font\.(ttf|otf|woff2?)$/
+
+function isNullableCustomFontAsset(value: unknown): boolean {
+  return value === null || (typeof value === 'string' && CUSTOM_FONT_ASSET_PATTERN.test(value))
+}
+
 function isPartialSettings(value: unknown): value is Partial<Settings> {
   if (!value || typeof value !== 'object') return false
   const v = value as Record<string, unknown>
@@ -66,6 +74,7 @@ function isPartialSettings(value: unknown): value is Partial<Settings> {
   if ('clientThemeReducedMotion' in v && typeof v.clientThemeReducedMotion !== 'boolean') return false
   if ('clientThemeAccentColor' in v && !isNullableHexColor(v.clientThemeAccentColor)) return false
   if ('clientThemeFont' in v && !isNullableFontName(v.clientThemeFont)) return false
+  if ('clientThemeCustomFontAsset' in v && !isNullableCustomFontAsset(v.clientThemeCustomFontAsset)) return false
   if ('clientThemeBannerImage' in v && !isNullableDataUri(v.clientThemeBannerImage)) return false
   if ('clientThemeIconImage' in v && !isNullableDataUri(v.clientThemeIconImage)) return false
   if ('inviteFriendsEnabled' in v && typeof v.inviteFriendsEnabled !== 'boolean') return false
