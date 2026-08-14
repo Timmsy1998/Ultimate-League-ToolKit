@@ -19,8 +19,8 @@ the League Client's own UI, described below.
 - Client Theme: cosmetic reskin of the League Client itself (background
   image, GIF, or muted video; accent color; font, including custom font
   uploads; profile banner and icon)
-- In-client tools: Dodge, Invite Friends, and Loot Helper rendered as a
-  small panel directly inside the League Client's own UI
+- In-client tools: Dodge, Invite Friends, and Loot Helper rendered as
+  native-looking buttons directly inside the League Client's own toolbars
 - Auto-update pipeline with code-signed installers
 
 ## Client theming
@@ -40,16 +40,18 @@ one registry change. Nothing else in ULTK runs elevated.
 
 ### In-client tools
 
-A separate, opt-in toggle on the same Client Theme page can also render a
-small ULTK panel inside the League Client for exactly three tools: Dodge
-(leave lobby), Invite Friends, and Loot Helper. This is a distinct, more
-limited exception from the cosmetic reskin above — it's still lobby/client-
-scope only (nothing touches an active game), every action needs an explicit
-click in the panel, and the panel itself never runs any League Client API
-call on its own. It talks over a loopback-only, token-authenticated local
-connection back to the exact same, already-implemented ULTK code that the
-Tools page uses, so there's only ever one reviewed code path for each
-action regardless of which UI triggered it.
+A separate, opt-in toggle on the same Client Theme page can also add
+native-looking buttons directly into the League Client's own UI for
+exactly three tools: a Dodge button in champion select, an Invite Friends
+button in the lobby, and a Loot Helper button on the loot page. This is a
+distinct, more limited exception from the cosmetic reskin above — it's
+still lobby/client-scope only (nothing touches an active game), every
+action needs an explicit click plus a confirmation for anything
+consequential, and the injected buttons never run any League Client API
+call on their own. They talk over a loopback-only, token-authenticated
+local connection back to the exact same, already-implemented ULTK code
+that the Tools page uses, so there's only ever one reviewed code path for
+each action regardless of which UI triggered it.
 
 ## Status
 
