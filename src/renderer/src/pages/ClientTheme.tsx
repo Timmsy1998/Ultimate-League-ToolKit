@@ -442,6 +442,27 @@ export function ClientTheme(): React.JSX.Element {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>In-client tools</h2>
+        <div className={settingsStyles.panel}>
+          <div className={settingsStyles.row}>
+            <div>
+              <p className={settingsStyles.rowTitle}>Show ULTK tools in the client</p>
+              <p className={settingsStyles.rowDescription}>
+                Adds a small ULTK panel inside the League Client itself for Dodge, Invite Friends, and Loot Helper —
+                nothing else. Every action still needs an explicit click in that panel; nothing fires
+                automatically. Requires the client hook above.
+              </p>
+            </div>
+            <Toggle
+              checked={settings.injectedToolsEnabled}
+              onChange={(checked) => updateSettings({ injectedToolsEnabled: checked })}
+              label="Show ULTK tools in the client"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
         <div className={settingsStyles.panel}>
           <div className={settingsStyles.row}>
             <div>

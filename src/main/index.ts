@@ -4,12 +4,17 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { removeBackgroundAsset, removeFontAsset, saveBackgroundAsset, saveFontAsset } from './client-theme/asset-store'
 import {
   applyTheme,
+  applyTools,
   disable as disableClientTheme,
   enable as enableClientTheme,
-  isEnabled as isClientThemeEnabled
+  isEnabled as isClientThemeEnabled,
+  removeTools
 } from './client-theme/injector-bridge'
 import { ensureLogDirectory, getLogFilePath, readRecentLines } from './client-theme/logger'
 import { buildThemePackage } from './client-theme/theme-builder'
+import { startToolsServer, stopToolsServer, TOOLS_SERVER_PORT } from './injected-tools/server'
+import { buildToolsPackage } from './injected-tools/tools-builder'
+import { getOrCreateToolsToken } from './injected-tools/token-store'
 import { LcuConnectionManager } from './lcu/connection-manager'
 import {
   isAllowedAssetPath,
@@ -178,7 +183,16 @@ function registerClientThemeBridge(): void {
     const pkg = buildThemePackage(settings)
     await applyTheme(pkg)
 
-    if (!settings.clientThemeEnabled || !(await isClientThemeEnabled())) {
+    const toolsToken = await getOrCreateToolsToken()
+    const toolsScript = buildToolsPackage(settings, `http://127.0.0.1:${TOOLS_SERVER_PORT}`, toolsToken)
+    if (toolsScript) {
+      await applyTools(toolsScript)
+    } else {
+      await removeTools()
+    }
+
+    const anyInjectionConfigured = settings.clientThemeEnabled || settings.injectedToolsEnabled
+    if (!anyInjectionConfigured || !(await isClientThemeEnabled())) {
       return { reloaded: false, reason: 'hook-disabled' }
     }
 
@@ -298,6 +312,10 @@ app.whenReady().then(async () => {
   registerRuneBookBridge()
   registerRankHistoryBridge()
   registerUpdaterBridge()
+  // Loopback-only; endpoints self-gate on injectedToolsEnabled and a
+  // persisted bearer token, so an idle listener here costs nothing and
+  // avoids the injected panel racing this app's own startup.
+  startToolsServer(lcuManager)
 
   app.on('activate', async () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow(await resolveInitialTheme())
@@ -312,5 +330,6 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   lcuManager.stop()
+  stopToolsServer()
   appUpdater.stop()
 })

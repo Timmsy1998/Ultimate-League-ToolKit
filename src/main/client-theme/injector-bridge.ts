@@ -21,6 +21,11 @@ const IFEO_VALUE_PATH =
 // PenguLoader/docs' javascript-plugin.md and module-system.md). A flat
 // ultk-theme.js sitting directly in plugins/ is invisible to it.
 const PLUGIN_DIR_NAME = 'ultk-theme'
+// Separate plugin directory for the functional in-client tools panel
+// (CLAUDE.md §5b) — kept apart from the cosmetic ultk-theme plugin so the
+// two carve-outs (5a cosmetic, 5b functional) stay independently
+// enable/disable-able and one being removed never touches the other's file.
+const TOOLS_PLUGIN_DIR_NAME = 'ultk-tools'
 const PLUGIN_ENTRY_FILE = 'index.js'
 
 function resourcesRoot(): string {
@@ -45,6 +50,10 @@ function pluginsDir(): string {
 
 function pluginDir(): string {
   return path.join(pluginsDir(), PLUGIN_DIR_NAME)
+}
+
+function toolsPluginDir(): string {
+  return path.join(pluginsDir(), TOOLS_PLUGIN_DIR_NAME)
 }
 
 // Windows command-line argument quoting per the CommandLineToArgvW
@@ -233,4 +242,21 @@ export async function applyTheme(pkg: ClientThemePackage): Promise<void> {
 export async function removeTheme(): Promise<void> {
   await rm(pluginDir(), { recursive: true, force: true })
   await logLine('removeTheme() removed plugin dir', { dir: pluginDir() })
+}
+
+export async function applyTools(js: string): Promise<void> {
+  const dir = toolsPluginDir()
+  await mkdir(dir, { recursive: true })
+  try {
+    await writeFile(path.join(dir, PLUGIN_ENTRY_FILE), js, 'utf-8')
+    await logLine('applyTools() wrote plugin', { dir })
+  } catch (error) {
+    await logLine('applyTools() failed', error)
+    throw error
+  }
+}
+
+export async function removeTools(): Promise<void> {
+  await rm(toolsPluginDir(), { recursive: true, force: true })
+  await logLine('removeTools() removed plugin dir', { dir: toolsPluginDir() })
 }

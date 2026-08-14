@@ -19,6 +19,8 @@ the League Client's own UI, described below.
 - Client Theme: cosmetic reskin of the League Client itself (background
   image, GIF, or muted video; accent color; font, including custom font
   uploads; profile banner and icon)
+- In-client tools: Dodge, Invite Friends, and Loot Helper rendered as a
+  small panel directly inside the League Client's own UI
 - Auto-update pipeline with code-signed installers
 
 ## Client theming
@@ -36,6 +38,19 @@ client sends or receives, and it never reads or writes League Client or
 game process memory. Enabling it asks for admin permission once, for that
 one registry change. Nothing else in ULTK runs elevated.
 
+### In-client tools
+
+A separate, opt-in toggle on the same Client Theme page can also render a
+small ULTK panel inside the League Client for exactly three tools: Dodge
+(leave lobby), Invite Friends, and Loot Helper. This is a distinct, more
+limited exception from the cosmetic reskin above — it's still lobby/client-
+scope only (nothing touches an active game), every action needs an explicit
+click in the panel, and the panel itself never runs any League Client API
+call on its own. It talks over a loopback-only, token-authenticated local
+connection back to the exact same, already-implemented ULTK code that the
+Tools page uses, so there's only ever one reviewed code path for each
+action regardless of which UI triggered it.
+
 ## Status
 
 - [x] UI shell, navigation, theming
@@ -45,7 +60,7 @@ one registry change. Nothing else in ULTK runs elevated.
 - [x] Client Theme (background image/GIF/video, accent color, fonts,
       banner, icon)
 - [x] Auto-update pipeline with signed installers
-- [ ] Embedding tools directly into the client's own UI
+- [x] Embedding tools directly into the client's own UI
 
 ## Getting started
 
